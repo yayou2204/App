@@ -82,6 +82,7 @@ class ProductCreate(BaseModel):
     description: str
     image_base64: str = ""
     stock_quantity: int
+    stock_status: str = "in_stock"  # "in_stock", "out_of_stock", "coming_soon"
     specifications: Dict[str, Any] = {}
     compatibility_requirements: Dict[str, Any] = {}
 
