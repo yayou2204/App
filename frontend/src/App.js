@@ -492,6 +492,8 @@ const Products = () => {
   const [category, setCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedSeries, setSelectedSeries] = useState('');
 
   const categories = ['CPU', 'GPU', 'RAM', 'MOTHERBOARD', 'STORAGE', 'PSU', 'CASE', 'COOLING'];
   const priceRanges = [
@@ -503,9 +505,48 @@ const Products = () => {
     { label: 'Plus de 2000 MAD', value: '2000-999999' }
   ];
 
+  // Brand options based on category
+  const getBrandOptions = () => {
+    const brands = new Set();
+    products.forEach(product => {
+      if (!category || product.category === category) {
+        brands.add(product.brand);
+      }
+    });
+    return Array.from(brands).sort();
+  };
+
+  // Series options for CPU and GPU
+  const getSeriesOptions = () => {
+    if (!category || (category !== 'CPU' && category !== 'GPU')) return [];
+    
+    const series = new Set();
+    products.forEach(product => {
+      if (product.category === category) {
+        // Extract series from product name
+        if (category === 'CPU') {
+          // For CPU: extract series like "Ryzen 9", "Core i7", etc.
+          const cpuSeries = product.name.match(/(Ryzen \d+|Core i\d+|FX-\d+|Athlon|Pentium)/i);
+          if (cpuSeries) series.add(cpuSeries[1]);
+        } else if (category === 'GPU') {
+          // For GPU: extract series like "RTX 4080", "GTX 1660", "RX 7800", etc.
+          const gpuSeries = product.name.match(/(RTX \d+|GTX \d+|RX \d+|Arc A\d+)/i);
+          if (gpuSeries) series.add(gpuSeries[1]);
+        }
+      }
+    });
+    return Array.from(series).sort();
+  };
+
   useEffect(() => {
     fetchProducts();
   }, [category, searchQuery]);
+
+  useEffect(() => {
+    // Reset brand and series filters when category changes
+    setSelectedBrand('');
+    setSelectedSeries('');
+  }, [category]);
 
   const fetchProducts = async () => {
     try {
@@ -544,19 +585,39 @@ const Products = () => {
     }
   };
 
-  const filterProductsByPrice = (products) => {
-    if (!priceRange) return products;
+  const filterProducts = (products) => {
+    let filtered = [...products];
     
-    const [min, max] = priceRange.split('-').map(Number);
-    return products.filter(product => {
-      const price = product.price;
-      return price >= min && price <= max;
-    });
+    // Filter by price range
+    if (priceRange) {
+      const [min, max] = priceRange.split('-').map(Number);
+      filtered = filtered.filter(product => {
+        const price = product.price;
+        return price >= min && price <= max;
+      });
+    }
+    
+    // Filter by brand
+    if (selectedBrand) {
+      filtered = filtered.filter(product => product.brand === selectedBrand);
+    }
+    
+    // Filter by series
+    if (selectedSeries) {
+      filtered = filtered.filter(product => {
+        return product.name.toLowerCase().includes(selectedSeries.toLowerCase());
+      });
+    }
+    
+    return filtered;
   };
 
-  const filteredProducts = filterProductsByPrice(products);
+  const filteredProducts = filterProducts(products);
 
   if (loading) return <div className="text-center py-8">Chargement...</div>;
+
+  const brandOptions = getBrandOptions();
+  const seriesOptions = getSeriesOptions();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -584,6 +645,56 @@ const Products = () => {
         </div>
       </div>
 
+      {/* Brand Filters */}
+      {brandOptions.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-3">Marques</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedBrand('')}
+              className={`px-4 py-2 rounded ${selectedBrand === '' ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            >
+              Toutes les marques
+            </button>
+            {brandOptions.map(brand => (
+              <button
+                key={brand}
+                onClick={() => setSelectedBrand(brand)}
+                className={`px-4 py-2 rounded ${selectedBrand === brand ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                {brand}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Series/Model Filters for CPU and GPU */}
+      {seriesOptions.length > 0 && (category === 'CPU' || category === 'GPU') && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-3">
+            {category === 'CPU' ? 'Séries de Processeurs' : 'Séries de Cartes Graphiques'}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedSeries('')}
+              className={`px-4 py-2 rounded ${selectedSeries === '' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            >
+              Toutes les séries
+            </button>
+            {seriesOptions.map(series => (
+              <button
+                key={series}
+                onClick={() => setSelectedSeries(series)}
+                className={`px-4 py-2 rounded ${selectedSeries === series ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                {series}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Price Filters */}
       <div className="mb-8">
         <h3 className="text-lg font-semibold mb-3">Filtrer par Prix</h3>
@@ -599,6 +710,46 @@ const Products = () => {
           ))}
         </div>
       </div>
+
+      {/* Active Filters Summary */}
+      {(category || selectedBrand || selectedSeries || priceRange) && (
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+          <h4 className="font-semibold mb-2">Filtres actifs:</h4>
+          <div className="flex flex-wrap gap-2">
+            {category && (
+              <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                Catégorie: {category}
+              </span>
+            )}
+            {selectedBrand && (
+              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
+                Marque: {selectedBrand}
+              </span>
+            )}
+            {selectedSeries && (
+              <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
+                Série: {selectedSeries}
+              </span>
+            )}
+            {priceRange && (
+              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                Prix: {priceRanges.find(r => r.value === priceRange)?.label}
+              </span>
+            )}
+            <button
+              onClick={() => {
+                setCategory('');
+                setSelectedBrand('');
+                setSelectedSeries('');
+                setPriceRange('');
+              }}
+              className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm hover:bg-red-200"
+            >
+              Effacer tous les filtres
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Products Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -650,7 +801,18 @@ const Products = () => {
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg mb-2">Aucun produit trouvé</p>
           <p className="text-gray-400">
-            {priceRange ? 'Essayez un autre filtre de prix' : 'Essayez une recherche différente'}
+            Essayez de modifier vos critères de filtre ou{' '}
+            <button 
+              onClick={() => {
+                setCategory('');
+                setSelectedBrand('');
+                setSelectedSeries('');
+                setPriceRange('');
+              }}
+              className="text-blue-600 hover:underline"
+            >
+              effacer tous les filtres
+            </button>
           </p>
         </div>
       )}
@@ -658,10 +820,14 @@ const Products = () => {
       {/* Product Statistics */}
       <div className="mt-12 bg-blue-50 p-6 rounded-lg">
         <h3 className="text-xl font-semibold mb-4 text-blue-800">Statistiques des Produits</h3>
-        <div className="grid md:grid-cols-3 gap-4 text-center">
+        <div className="grid md:grid-cols-4 gap-4 text-center">
           <div className="bg-white p-4 rounded">
             <div className="text-2xl font-bold text-blue-600">{products.length}</div>
-            <div className="text-gray-600">Produits disponibles</div>
+            <div className="text-gray-600">Total produits</div>
+          </div>
+          <div className="bg-white p-4 rounded">
+            <div className="text-2xl font-bold text-green-600">{filteredProducts.length}</div>
+            <div className="text-gray-600">Produits filtrés</div>
           </div>
           <div className="bg-white p-4 rounded">
             <div className="text-2xl font-bold text-green-600">
