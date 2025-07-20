@@ -709,6 +709,14 @@ const Products = () => {
     }
   };
 
+  const renderStars = (rating) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'} style={{ fontSize: '14px' }}>
+        ⭐
+      </span>
+    ));
+  };
+
   const filterProducts = (products) => {
     let filtered = [...products];
     
