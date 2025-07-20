@@ -1,54 +1,1372 @@
-import { useEffect } from "react";
+import React, { useState, useEffect, useContext, createContext } from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import axios from "axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+// Auth Context
+const AuthContext = createContext();
+
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
+
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      // Get user info from token if needed
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+    }
+  }, [token]);
+
+  const login = (tokenData, userData) => {
+    localStorage.setItem('token', tokenData);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setToken(tokenData);
+    setUser(userData);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${tokenData}`;
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+    delete axios.defaults.headers.common['Authorization'];
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, token, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+const useAuth = () => useContext(AuthContext);
+
+// Header Component
+const Header = () => {
+  const { user, logout } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      window.location.href = `/products?search=${encodeURIComponent(searchQuery)}`;
     }
   };
 
+  return (
+    <header className="bg-blue-900 text-white">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between py-4">
+          <a href="/" className="text-2xl font-bold">INFOTECH.MA</a>
+          
+          <div className="flex-1 max-w-2xl mx-8">
+            <form onSubmit={handleSearch} className="relative">
+              <input
+                type="text"
+                placeholder="Rechercher des composants PC..."
+                className="w-full px-4 py-2 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-blue-600"
+              >
+                🔍
+              </button>
+            </form>
+          </div>
+
+          <nav className="flex items-center space-x-4">
+            <a href="/products" className="hover:text-blue-300">Produits</a>
+            <a href="/configurator" className="hover:text-blue-300">Configurateur</a>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <a href="/cart" className="hover:text-blue-300">Panier</a>
+                <span className="text-blue-300">Bonjour, {user.username}</span>
+                {user.is_admin && <a href="/admin" className="bg-red-600 px-3 py-1 rounded hover:bg-red-700">Admin</a>}
+                <button onClick={logout} className="bg-red-600 px-3 py-1 rounded hover:bg-red-700">Déconnexion</button>
+              </div>
+            ) : (
+              <div className="space-x-2">
+                <a href="/login" className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">Connexion</a>
+                <a href="/register" className="bg-green-600 px-4 py-2 rounded hover:bg-green-700">Inscription</a>
+              </div>
+            )}
+          </nav>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+// Homepage Component
+const Homepage = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const heroImages = [
+    {
+      url: "https://images.unsplash.com/photo-1660855552442-1bae49431379",
+      title: "PC Gaming Haute Performance",
+      description: "Découvrez nos composants gaming de dernière génération"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1616668010115-8f8ce69a4d04",
+      title: "Configurations Complètes",
+      description: "Des setups gaming complets pour tous les budgets"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1603732551681-2e91159b9dc2",
+      title: "Composants de Qualité",
+      description: "Les meilleures marques pour votre configuration"
+    }
+  ];
+
   useEffect(() => {
-    helloWorldApi();
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+      {/* Hero Carousel */}
+      <div className="relative h-96 overflow-hidden">
+        {heroImages.map((image, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-transform duration-500 ease-in-out ${
+              index === currentSlide ? 'translate-x-0' : 'translate-x-full'
+            }`}
+            style={{
+              backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url(${image.url})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            <div className="flex items-center justify-center h-full text-white text-center">
+              <div>
+                <h1 className="text-4xl font-bold mb-4">{image.title}</h1>
+                <p className="text-xl mb-8">{image.description}</p>
+                <a 
+                  href="/configurator"
+                  className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  Configurez Votre PC
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        {/* Carousel indicators */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+          {heroImages.map((_, index) => (
+            <button
+              key={index}
+              className={`w-3 h-3 rounded-full ${
+                index === currentSlide ? 'bg-white' : 'bg-white/50'
+              }`}
+              onClick={() => setCurrentSlide(index)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Features Section */}
+      <div className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12">Pourquoi Choisir INFOTECH.MA</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl">🎮</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Gaming Performance</h3>
+              <p className="text-gray-600">Composants optimisés pour le gaming haute performance</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl">✅</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Compatibilité Garantie</h3>
+              <p className="text-gray-600">Notre configurateur vérifie la compatibilité de tous les composants</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-white text-2xl">🚚</span>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Livraison Rapide</h3>
+              <p className="text-gray-600">Expédition rapide partout au Maroc</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-function App() {
+// Login Component
+const Login = () => {
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const { login } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(`${API}/login`, formData);
+      login(response.data.access_token, response.data.user);
+      window.location.href = '/';
+    } catch (error) {
+      setError(error.response?.data?.detail || 'Erreur de connexion');
+    }
+  };
+
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12">
+      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold text-center mb-6">Connexion</h2>
+        {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Mot de passe
+            </label>
+            <input
+              type="password"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Se connecter
+          </button>
+        </form>
+        <p className="text-center mt-4">
+          Pas de compte? <a href="/register" className="text-blue-600 hover:underline">Inscrivez-vous</a>
+        </p>
+        <p className="text-center mt-2">
+          <a href="/admin-login" className="text-red-600 hover:underline">Connexion Admin</a>
+        </p>
+      </div>
     </div>
   );
-}
+};
+
+// Register Component
+const Register = () => {
+  const [formData, setFormData] = useState({ email: '', username: '', password: '' });
+  const [error, setError] = useState('');
+  const { login } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(`${API}/register`, formData);
+      login(response.data.access_token, response.data.user);
+      window.location.href = '/';
+    } catch (error) {
+      setError(error.response?.data?.detail || 'Erreur lors de l\'inscription');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12">
+      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold text-center mb-6">Inscription</h2>
+        {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Nom d'utilisateur
+            </label>
+            <input
+              type="text"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={formData.username}
+              onChange={(e) => setFormData({...formData, username: e.target.value})}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Mot de passe
+            </label>
+            <input
+              type="password"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            S'inscrire
+          </button>
+        </form>
+        <p className="text-center mt-4">
+          Déjà un compte? <a href="/login" className="text-blue-600 hover:underline">Connectez-vous</a>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Admin Login Component
+const AdminLogin = () => {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const { login } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(`${API}/admin/login`, { password });
+      login(response.data.access_token, response.data.user);
+      window.location.href = '/admin';
+    } catch (error) {
+      setError('Mot de passe administrateur incorrect');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12">
+      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold text-center mb-6">Connexion Administrateur</h2>
+        {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Mot de passe administrateur
+            </label>
+            <input
+              type="password"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Se connecter
+          </button>
+        </form>
+        <p className="text-center mt-4">
+          <a href="/login" className="text-blue-600 hover:underline">Retour à la connexion normale</a>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// Products Component
+const Products = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const categories = ['CPU', 'GPU', 'RAM', 'MOTHERBOARD', 'STORAGE', 'PSU', 'CASE', 'COOLING'];
+
+  useEffect(() => {
+    fetchProducts();
+  }, [category, searchQuery]);
+
+  const fetchProducts = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (category) params.append('category', category);
+      if (searchQuery) params.append('search', searchQuery);
+      
+      const response = await axios.get(`${API}/products?${params}`);
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des produits:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addToCart = async (productId) => {
+    try {
+      await axios.post(`${API}/cart/add?product_id=${productId}&quantity=1`);
+      alert('Produit ajouté au panier !');
+    } catch (error) {
+      alert('Erreur lors de l\'ajout au panier');
+    }
+  };
+
+  const getStockBadge = (product) => {
+    switch (product.stock_status) {
+      case 'in_stock':
+        return <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">En stock ({product.stock_quantity})</span>;
+      case 'out_of_stock':
+        return <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Rupture de stock</span>;
+      case 'coming_soon':
+        return <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Bientôt disponible</span>;
+      default:
+        return null;
+    }
+  };
+
+  if (loading) return <div className="text-center py-8">Chargement...</div>;
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Nos Produits</h1>
+      
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 mb-8">
+        <button
+          onClick={() => setCategory('')}
+          className={`px-4 py-2 rounded ${category === '' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+        >
+          Toutes les catégories
+        </button>
+        {categories.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setCategory(cat)}
+            className={`px-4 py-2 rounded ${category === cat ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Products Grid */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {products.map(product => (
+          <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="h-48 bg-gray-200 flex items-center justify-center">
+              {product.image_base64 ? (
+                <img 
+                  src={`data:image/jpeg;base64,${product.image_base64}`} 
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="text-gray-400 text-center">
+                  <div className="text-4xl mb-2">📦</div>
+                  <div>Image non disponible</div>
+                </div>
+              )}
+            </div>
+            <div className="p-4">
+              <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
+              <p className="text-gray-600 text-sm mb-2">{product.brand}</p>
+              <p className="text-blue-600 font-bold text-xl mb-2">{product.price} MAD</p>
+              <div className="mb-3">
+                {getStockBadge(product)}
+              </div>
+              <div className="flex space-x-2">
+                <a 
+                  href={`/product/${product.id}`}
+                  className="flex-1 bg-gray-600 text-white py-2 px-4 rounded text-center hover:bg-gray-700"
+                >
+                  Voir détails
+                </a>
+                {product.stock_status === 'in_stock' && (
+                  <button
+                    onClick={() => addToCart(product.id)}
+                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                  >
+                    Ajouter
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {products.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">Aucun produit trouvé</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Product Detail Component
+const ProductDetail = ({ productId }) => {
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [productId]);
+
+  const fetchProduct = async () => {
+    try {
+      const response = await axios.get(`${API}/products/${productId}`);
+      setProduct(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement du produit:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addToCart = async () => {
+    try {
+      await axios.post(`${API}/cart/add?product_id=${productId}&quantity=1`);
+      alert('Produit ajouté au panier !');
+    } catch (error) {
+      alert('Erreur lors de l\'ajout au panier');
+    }
+  };
+
+  if (loading) return <div className="text-center py-8">Chargement...</div>;
+  if (!product) return <div className="text-center py-8">Produit non trouvé</div>;
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="bg-gray-200 h-96 rounded-lg flex items-center justify-center">
+          {product.image_base64 ? (
+            <img 
+              src={`data:image/jpeg;base64,${product.image_base64}`} 
+              alt={product.name}
+              className="max-w-full max-h-full object-contain"
+            />
+          ) : (
+            <div className="text-gray-400 text-center">
+              <div className="text-6xl mb-4">📦</div>
+              <div>Image non disponible</div>
+            </div>
+          )}
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+          <p className="text-gray-600 mb-4">{product.brand}</p>
+          <p className="text-blue-600 font-bold text-3xl mb-4">{product.price} MAD</p>
+          
+          {/* Stock Status */}
+          <div className="mb-6">
+            {product.stock_status === 'in_stock' && (
+              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                En stock ({product.stock_quantity} disponibles)
+              </span>
+            )}
+            {product.stock_status === 'out_of_stock' && (
+              <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full">Rupture de stock</span>
+            )}
+            {product.stock_status === 'coming_soon' && (
+              <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">Bientôt disponible</span>
+            )}
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold mb-2">Description</h3>
+            <p className="text-gray-700">{product.description}</p>
+          </div>
+
+          {/* Specifications */}
+          {Object.keys(product.specifications).length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-2">Spécifications</h3>
+              <div className="bg-gray-50 p-4 rounded">
+                {Object.entries(product.specifications).map(([key, value]) => (
+                  <div key={key} className="flex justify-between py-1">
+                    <span className="capitalize">{key.replace('_', ' ')}:</span>
+                    <span className="font-medium">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {product.stock_status === 'in_stock' && (
+            <button
+              onClick={addToCart}
+              className="bg-blue-600 text-white py-3 px-8 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Ajouter au panier
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// PC Configurator Component
+const PCConfigurator = () => {
+  const { user } = useAuth();
+  const [categories] = useState(['CPU', 'MOTHERBOARD', 'RAM', 'GPU', 'STORAGE', 'PSU', 'CASE', 'COOLING']);
+  const [selectedComponents, setSelectedComponents] = useState({});
+  const [availableProducts, setAvailableProducts] = useState({});
+  const [compatibilityResult, setCompatibilityResult] = useState(null);
+  const [configName, setConfigName] = useState('');
+
+  useEffect(() => {
+    loadProductsForCategories();
+  }, []);
+
+  const loadProductsForCategories = async () => {
+    const products = {};
+    for (const category of categories) {
+      try {
+        const response = await axios.get(`${API}/products?category=${category}`);
+        products[category] = response.data;
+      } catch (error) {
+        console.error(`Erreur lors du chargement des produits ${category}:`, error);
+      }
+    }
+    setAvailableProducts(products);
+  };
+
+  const selectComponent = (category, productId) => {
+    setSelectedComponents({
+      ...selectedComponents,
+      [category]: productId
+    });
+  };
+
+  const validateConfiguration = async () => {
+    if (Object.keys(selectedComponents).length === 0) {
+      alert('Veuillez sélectionner au moins un composant');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${API}/configurator/validate`, selectedComponents);
+      setCompatibilityResult(response.data);
+    } catch (error) {
+      console.error('Erreur lors de la validation:', error);
+    }
+  };
+
+  const saveConfiguration = async () => {
+    if (!user) {
+      alert('Veuillez vous connecter pour sauvegarder votre configuration');
+      return;
+    }
+
+    if (!configName) {
+      alert('Veuillez donner un nom à votre configuration');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/configurator/save`, {
+        name: configName,
+        components: selectedComponents
+      });
+      alert('Configuration sauvegardée avec succès !');
+      setConfigName('');
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      alert('Erreur lors de la sauvegarde');
+    }
+  };
+
+  const getSelectedProductInfo = (category) => {
+    const productId = selectedComponents[category];
+    if (!productId || !availableProducts[category]) return null;
+    
+    return availableProducts[category].find(p => p.id === productId);
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Configurateur PC</h1>
+
+      {/* Component Selection */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div>
+          <h2 className="text-2xl font-semibold mb-6">Sélectionnez vos composants</h2>
+          
+          {categories.map(category => (
+            <div key={category} className="mb-6 border rounded-lg p-4">
+              <h3 className="text-lg font-semibold mb-3">{category}</h3>
+              
+              {selectedComponents[category] ? (
+                <div className="bg-blue-50 p-3 rounded mb-3">
+                  {(() => {
+                    const product = getSelectedProductInfo(category);
+                    return product ? (
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-medium">{product.name}</div>
+                          <div className="text-blue-600 font-semibold">{product.price} MAD</div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const newComponents = {...selectedComponents};
+                            delete newComponents[category];
+                            setSelectedComponents(newComponents);
+                          }}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : null;
+                  })()}
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {availableProducts[category]?.map(product => (
+                    <button
+                      key={product.id}
+                      onClick={() => selectComponent(category, product.id)}
+                      className="w-full text-left p-2 border rounded hover:bg-gray-50 flex justify-between items-center"
+                      disabled={product.stock_status !== 'in_stock'}
+                    >
+                      <div>
+                        <div className="font-medium">{product.name}</div>
+                        <div className="text-sm text-gray-600">{product.brand}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-blue-600 font-semibold">{product.price} MAD</div>
+                        {product.stock_status !== 'in_stock' && (
+                          <div className="text-xs text-red-600">Non disponible</div>
+                        )}
+                      </div>
+                    </button>
+                  )) || <div className="text-gray-500">Chargement...</div>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Configuration Summary */}
+        <div>
+          <h2 className="text-2xl font-semibold mb-6">Résumé de la configuration</h2>
+          
+          <div className="bg-white border rounded-lg p-6 sticky top-4">
+            {Object.keys(selectedComponents).length === 0 ? (
+              <p className="text-gray-500 text-center">Aucun composant sélectionné</p>
+            ) : (
+              <>
+                <div className="space-y-3 mb-6">
+                  {Object.entries(selectedComponents).map(([category, productId]) => {
+                    const product = getSelectedProductInfo(category);
+                    return product ? (
+                      <div key={category} className="flex justify-between">
+                        <span>{category}: {product.name}</span>
+                        <span className="font-semibold">{product.price} MAD</span>
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+
+                <div className="border-t pt-4 mb-6">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Prix total:</span>
+                    <span>
+                      {Object.entries(selectedComponents).reduce((total, [category, productId]) => {
+                        const product = getSelectedProductInfo(category);
+                        return total + (product ? product.price : 0);
+                      }, 0)} MAD
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={validateConfiguration}
+                  className="w-full bg-blue-600 text-white py-2 rounded mb-3 hover:bg-blue-700"
+                >
+                  Vérifier la compatibilité
+                </button>
+
+                {compatibilityResult && (
+                  <div className={`p-3 rounded mb-3 ${
+                    compatibilityResult.compatible ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    <div className="font-semibold">
+                      {compatibilityResult.compatible ? '✅ Configuration compatible' : '❌ Problèmes de compatibilité'}
+                    </div>
+                    {compatibilityResult.issues.length > 0 && (
+                      <ul className="mt-2 text-sm">
+                        {compatibilityResult.issues.map((issue, index) => (
+                          <li key={index}>• {issue}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+
+                {user && (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Nom de la configuration"
+                      value={configName}
+                      onChange={(e) => setConfigName(e.target.value)}
+                      className="w-full p-2 border rounded mb-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    />
+                    <button
+                      onClick={saveConfiguration}
+                      className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+                    >
+                      Sauvegarder la configuration
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Cart Component
+const Cart = () => {
+  const [cart, setCart] = useState({ items: [], total: 0, discount: 0 });
+  const [promoCode, setPromoCode] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCart();
+  }, []);
+
+  const fetchCart = async () => {
+    try {
+      const response = await axios.get(`${API}/cart`);
+      setCart(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement du panier:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const applyPromoCode = async () => {
+    if (!promoCode) return;
+    
+    try {
+      await axios.post(`${API}/cart/apply-promo?code=${promoCode}`);
+      fetchCart();
+      alert('Code promo appliqué avec succès !');
+    } catch (error) {
+      alert('Code promo invalide');
+    }
+  };
+
+  if (loading) return <div className="text-center py-8">Chargement...</div>;
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Mon Panier</h1>
+
+      {cart.items.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-4">Votre panier est vide</p>
+          <a href="/products" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+            Continuer les achats
+          </a>
+        </div>
+      ) : (
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow">
+              {cart.items.map((item, index) => (
+                <div key={index} className="p-6 border-b flex items-center">
+                  <div className="flex-1">
+                    <h3 className="font-semibold">Produit ID: {item.product_id}</h3>
+                    <p className="text-gray-600">Quantité: {item.quantity}</p>
+                    <p className="text-blue-600 font-semibold">{item.price} MAD</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold">{item.quantity * item.price} MAD</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="lg:col-span-1">
+            <div className="bg-white p-6 rounded-lg shadow sticky top-4">
+              <h2 className="text-xl font-semibold mb-4">Résumé</h2>
+              
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between">
+                  <span>Sous-total:</span>
+                  <span>{cart.total} MAD</span>
+                </div>
+                {cart.discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Remise:</span>
+                    <span>-{cart.discount} MAD</span>
+                  </div>
+                )}
+                <div className="border-t pt-2">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total:</span>
+                    <span>{cart.total - cart.discount} MAD</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <div className="flex">
+                  <input
+                    type="text"
+                    placeholder="Code promo"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    className="flex-1 px-3 py-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  <button
+                    onClick={applyPromoCode}
+                    className="bg-gray-600 text-white px-4 py-2 rounded-r-lg hover:bg-gray-700"
+                  >
+                    Appliquer
+                  </button>
+                </div>
+              </div>
+
+              <button className="w-full bg-green-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-green-700">
+                Procéder au paiement
+              </button>
+              
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                * Le paiement sera disponible prochainement
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Admin Panel Component
+const AdminPanel = () => {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('products');
+  const [products, setProducts] = useState([]);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  
+  const [productForm, setProductForm] = useState({
+    name: '',
+    category: 'CPU',
+    brand: '',
+    price: '',
+    description: '',
+    stock_quantity: '',
+    specifications: '',
+    image_base64: ''
+  });
+
+  useEffect(() => {
+    if (user && user.is_admin) {
+      fetchProducts();
+    }
+  }, [user]);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get(`${API}/products`);
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des produits:', error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const formData = {
+        ...productForm,
+        price: parseFloat(productForm.price),
+        stock_quantity: parseInt(productForm.stock_quantity),
+        specifications: productForm.specifications ? JSON.parse(productForm.specifications) : {}
+      };
+
+      if (editingProduct) {
+        await axios.put(`${API}/admin/products/${editingProduct.id}`, formData);
+        alert('Produit modifié avec succès !');
+      } else {
+        await axios.post(`${API}/admin/products`, formData);
+        alert('Produit ajouté avec succès !');
+      }
+      
+      resetForm();
+      fetchProducts();
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Erreur lors de l\'opération');
+    }
+  };
+
+  const resetForm = () => {
+    setProductForm({
+      name: '',
+      category: 'CPU',
+      brand: '',
+      price: '',
+      description: '',
+      stock_quantity: '',
+      specifications: '',
+      image_base64: ''
+    });
+    setShowAddProduct(false);
+    setEditingProduct(null);
+  };
+
+  const editProduct = (product) => {
+    setProductForm({
+      name: product.name,
+      category: product.category,
+      brand: product.brand,
+      price: product.price.toString(),
+      description: product.description,
+      stock_quantity: product.stock_quantity.toString(),
+      specifications: JSON.stringify(product.specifications, null, 2),
+      image_base64: product.image_base64 || ''
+    });
+    setEditingProduct(product);
+    setShowAddProduct(true);
+  };
+
+  const deleteProduct = async (productId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) return;
+    
+    try {
+      await axios.delete(`${API}/admin/products/${productId}`);
+      alert('Produit supprimé avec succès !');
+      fetchProducts();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target.result.split(',')[1];
+        setProductForm({ ...productForm, image_base64: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  if (!user || !user.is_admin) {
+    return <div className="text-center py-8">Accès non autorisé</div>;
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Panel Administrateur</h1>
+
+      <div className="flex border-b mb-6">
+        <button
+          className={`px-4 py-2 ${activeTab === 'products' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+          onClick={() => setActiveTab('products')}
+        >
+          Gestion des produits
+        </button>
+        <button
+          className={`px-4 py-2 ${activeTab === 'promos' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+          onClick={() => setActiveTab('promos')}
+        >
+          Codes promo
+        </button>
+      </div>
+
+      {activeTab === 'products' && (
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">Produits</h2>
+            <button
+              onClick={() => setShowAddProduct(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Ajouter un produit
+            </button>
+          </div>
+
+          {/* Add/Edit Product Form */}
+          {showAddProduct && (
+            <div className="bg-white p-6 rounded-lg shadow mb-6">
+              <h3 className="text-lg font-semibold mb-4">
+                {editingProduct ? 'Modifier le produit' : 'Ajouter un nouveau produit'}
+              </h3>
+              
+              <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Nom</label>
+                  <input
+                    type="text"
+                    value={productForm.name}
+                    onChange={(e) => setProductForm({...productForm, name: e.target.value})}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Catégorie</label>
+                  <select
+                    value={productForm.category}
+                    onChange={(e) => setProductForm({...productForm, category: e.target.value})}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  >
+                    {['CPU', 'GPU', 'RAM', 'MOTHERBOARD', 'STORAGE', 'PSU', 'CASE', 'COOLING'].map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Marque</label>
+                  <input
+                    type="text"
+                    value={productForm.brand}
+                    onChange={(e) => setProductForm({...productForm, brand: e.target.value})}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Prix (MAD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={productForm.price}
+                    onChange={(e) => setProductForm({...productForm, price: e.target.value})}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Stock</label>
+                  <input
+                    type="number"
+                    value={productForm.stock_quantity}
+                    onChange={(e) => setProductForm({...productForm, stock_quantity: e.target.value})}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <textarea
+                    value={productForm.description}
+                    onChange={(e) => setProductForm({...productForm, description: e.target.value})}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    rows="3"
+                    required
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-1">Spécifications (JSON)</label>
+                  <textarea
+                    value={productForm.specifications}
+                    onChange={(e) => setProductForm({...productForm, specifications: e.target.value})}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    rows="4"
+                    placeholder='{"socket": "AM4", "cores": 12, "threads": 24}'
+                  />
+                </div>
+
+                <div className="md:col-span-2 flex space-x-4">
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                  >
+                    {editingProduct ? 'Modifier' : 'Ajouter'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="bg-gray-600 text-white px-6 py-2 rounded hover:bg-gray-700"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Products List */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Produit
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Catégorie
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Prix
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Stock
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {products.map(product => (
+                    <tr key={product.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                          <div className="text-sm text-gray-500">{product.brand}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {product.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {product.price} MAD
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          product.stock_status === 'in_stock' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {product.stock_quantity} en stock
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <button
+                          onClick={() => editProduct(product)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          onClick={() => deleteProduct(product.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Supprimer
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Main App Component with Routing
+const App = () => {
+  const [currentPage, setCurrentPage] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPage(window.location.pathname);
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const renderPage = () => {
+    if (currentPage === '/') return <Homepage />;
+    if (currentPage === '/login') return <Login />;
+    if (currentPage === '/register') return <Register />;
+    if (currentPage === '/admin-login') return <AdminLogin />;
+    if (currentPage === '/products') return <Products />;
+    if (currentPage.startsWith('/product/')) return <ProductDetail productId={currentPage.split('/')[2]} />;
+    if (currentPage === '/configurator') return <PCConfigurator />;
+    if (currentPage === '/cart') return <Cart />;
+    if (currentPage === '/admin') return <AdminPanel />;
+    
+    return <div className="text-center py-8">Page non trouvée</div>;
+  };
+
+  return (
+    <AuthProvider>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main>
+          {renderPage()}
+        </main>
+        <footer className="bg-gray-800 text-white py-8">
+          <div className="container mx-auto px-4 text-center">
+            <p>&copy; 2025 INFOTECH.MA - Votre spécialiste en composants PC gaming</p>
+          </div>
+        </footer>
+      </div>
+    </AuthProvider>
+  );
+};
 
 export default App;
