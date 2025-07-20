@@ -357,6 +357,30 @@ frontend:
         agent: "testing"
         comment: "✅ PRODUCT REVIEWS SYSTEM FULLY TESTED: All 10 review-related tests passed (100% success rate). COMPREHENSIVE TESTING COMPLETED: POST /api/reviews (create review), GET /api/reviews/{product_id} (get reviews), GET /api/reviews/{product_id}/stats (CRITICAL - statistics for products page), DELETE /api/reviews/{review_id} (delete review). CRITICAL STATS ENDPOINT VERIFIED: Returns correct format with average_rating, total_reviews, and rating_distribution. Tested scenarios: products with no reviews (returns 0 values), products with multiple reviews (calculates correct averages), multiple products stats retrieval (simulating products page load). AUTHENTICATION & VALIDATION TESTED: Review creation requires authentication, invalid ratings (0, 6) correctly rejected, non-existent products handled properly. AVERAGE CALCULATION VERIFIED: Multiple reviews with different ratings (3, 4, 5 stars) correctly calculate average (4.2★). Backend reviews system fully operational and ready for frontend integration."
 
+  - task: "Synchronisation des étoiles avec les notes exactes"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "AMÉLIORATION ÉTOILES: Modifié la fonction renderStars() pour afficher les étoiles de façon plus précise. Au lieu d'arrondir la note (ex: 4.2 -> 4 étoiles), maintenant affiche 4.2 étoiles avec des étoiles partiellement remplies. Supprimé Math.round() dans l'affichage des notes moyennes dans les listes de produits et pages détaillées."
+
+  - task: "Correction option Bientôt disponible dans panel admin"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "CORRECTION BIENTÔT DISPONIBLE: 1) Corrigé l'affichage dans le tableau des produits du panel admin pour afficher correctement 'Bientôt disponible' avec badge jaune. 2) Modifié la logique backend pour respecter le stock_status envoyé depuis le frontend au lieu de le forcer automatiquement basé sur la quantité. L'option était déjà présente dans le formulaire mais ne s'affichait pas correctement dans la liste."
+
   - task: "Homepage Text Modifications"
     implemented: true
     working: true
