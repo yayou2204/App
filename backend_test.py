@@ -2310,6 +2310,20 @@ def run_all_tests():
     test_delete_product_filter()
     test_invalid_filter_operations()
     
+    # Product Reviews System Tests
+    print("⭐ PRODUCT REVIEWS SYSTEM TESTS")
+    print("-" * 40)
+    test_create_product_review()
+    test_get_product_reviews()
+    test_get_product_review_stats()
+    test_product_review_stats_no_reviews()
+    test_multiple_product_review_stats()
+    test_create_multiple_reviews_different_ratings()
+    test_delete_product_review()
+    test_review_authentication()
+    test_review_invalid_rating()
+    test_review_nonexistent_product()
+    
     # Summary
     print("=" * 80)
     print("TEST SUMMARY")
