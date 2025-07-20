@@ -1463,7 +1463,9 @@ const AdminPanel = () => {
 
   const togglePromoStatus = async (promoId, currentStatus) => {
     try {
-      await axios.put(`${API}/admin/promo-codes/${promoId}/toggle`, { active: !currentStatus });
+      await axios.put(`${API}/admin/promo-codes/${promoId}/toggle`, null, {
+        params: { active: !currentStatus }
+      });
       alert(`Code promo ${!currentStatus ? 'activé' : 'désactivé'} avec succès !`);
       fetchPromoCodes();
     } catch (error) {
