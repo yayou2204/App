@@ -376,6 +376,7 @@ async def get_cart(user: User = Depends(get_current_user)):
     if not cart:
         cart = Cart(user_id=user.id)
         await db.carts.insert_one(cart.dict())
+        return cart
     return Cart(**cart)
 
 @api_router.post("/cart/add")
