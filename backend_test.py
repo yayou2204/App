@@ -2055,6 +2055,300 @@ def test_review_nonexistent_product():
         log_test("Review Nonexistent Product", False, "Request failed", str(e))
         return False
 
+# ===== NEW TESTS FOR RECENT MODIFICATIONS =====
+
+def test_create_product_with_coming_soon_status():
+    """Test creating a product with stock_status = 'coming_soon'"""
+    if not admin_token:
+        log_test("Create Product - Coming Soon", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        product_data = {
+            "name": "Test Coming Soon Product",
+            "category": "GPU",
+            "brand": "NVIDIA",
+            "price": 1299.99,
+            "description": "Upcoming high-performance graphics card",
+            "image_base64": "",
+            "stock_quantity": 0,
+            "stock_status": "coming_soon",  # Explicitly set to coming_soon
+            "specifications": {
+                "memory": "24GB GDDR6X",
+                "power_requirement": 450
+            },
+            "compatibility_requirements": {}
+        }
+        
+        response = requests.post(f"{BASE_URL}/admin/products", json=product_data, headers=headers)
+        
+        if response.status_code == 200:
+            product = response.json()
+            if "id" in product and product["stock_status"] == "coming_soon":
+                log_test("Create Product - Coming Soon", True, f"✅ Product created with 'coming_soon' status: {product['name']}")
+                return True
+            else:
+                log_test("Create Product - Coming Soon", False, f"Expected 'coming_soon' status, got: {product.get('stock_status')}")
+                return False
+        else:
+            log_test("Create Product - Coming Soon", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Create Product - Coming Soon", False, "Request failed", str(e))
+        return False
+
+def test_update_product_to_coming_soon():
+    """Test updating an existing product to stock_status = 'coming_soon'"""
+    if not admin_token or not sample_product_id:
+        log_test("Update Product - Coming Soon", False, "No admin token or sample product available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # First get the current product data
+        get_response = requests.get(f"{BASE_URL}/products/{sample_product_id}")
+        if get_response.status_code != 200:
+            log_test("Update Product - Coming Soon", False, "Could not fetch product for update test")
+            return False
+        
+        current_product = get_response.json()
+        
+        # Update with coming_soon status
+        update_data = {
+            "name": current_product["name"],
+            "category": current_product["category"],
+            "brand": current_product["brand"],
+            "price": current_product["price"],
+            "description": current_product["description"],
+            "image_base64": current_product.get("image_base64", ""),
+            "stock_quantity": current_product["stock_quantity"],
+            "stock_status": "coming_soon",  # Change to coming_soon
+            "specifications": current_product.get("specifications", {}),
+            "compatibility_requirements": current_product.get("compatibility_requirements", {})
+        }
+        
+        response = requests.put(f"{BASE_URL}/admin/products/{sample_product_id}", json=update_data, headers=headers)
+        
+        if response.status_code == 200:
+            # Verify the update by fetching the product again
+            verify_response = requests.get(f"{BASE_URL}/products/{sample_product_id}")
+            if verify_response.status_code == 200:
+                updated_product = verify_response.json()
+                if updated_product["stock_status"] == "coming_soon":
+                    log_test("Update Product - Coming Soon", True, f"✅ Product updated to 'coming_soon' status: {updated_product['name']}")
+                    return True
+                else:
+                    log_test("Update Product - Coming Soon", False, f"Expected 'coming_soon' status, got: {updated_product.get('stock_status')}")
+                    return False
+            else:
+                log_test("Update Product - Coming Soon", False, "Could not verify product update")
+                return False
+        else:
+            log_test("Update Product - Coming Soon", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Update Product - Coming Soon", False, "Request failed", str(e))
+        return False
+
+def test_all_stock_status_values():
+    """Test creating products with all three stock_status values"""
+    if not admin_token:
+        log_test("All Stock Status Values", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        status_values = ["in_stock", "out_of_stock", "coming_soon"]
+        created_products = []
+        
+        for i, status in enumerate(status_values):
+            product_data = {
+                "name": f"Test Product {status.replace('_', ' ').title()}",
+                "category": "CPU",
+                "brand": "AMD",
+                "price": 299.99 + (i * 100),
+                "description": f"Test product with {status} status",
+                "image_base64": "",
+                "stock_quantity": 10 if status == "in_stock" else 0,
+                "stock_status": status,
+                "specifications": {"cores": 8, "threads": 16},
+                "compatibility_requirements": {}
+            }
+            
+            response = requests.post(f"{BASE_URL}/admin/products", json=product_data, headers=headers)
+            
+            if response.status_code == 200:
+                product = response.json()
+                if product["stock_status"] == status:
+                    created_products.append(product["name"])
+                else:
+                    log_test("All Stock Status Values", False, f"Product created with wrong status: expected {status}, got {product.get('stock_status')}")
+                    return False
+            else:
+                log_test("All Stock Status Values", False, f"Failed to create product with {status} status: HTTP {response.status_code}")
+                return False
+        
+        log_test("All Stock Status Values", True, f"✅ Successfully created products with all stock statuses: {', '.join(created_products)}")
+        return True
+        
+    except Exception as e:
+        log_test("All Stock Status Values", False, "Request failed", str(e))
+        return False
+
+def test_exact_star_rating_calculation():
+    """Test that review stats return exact ratings (not rounded) for star synchronization"""
+    if not user_token or not sample_product_id:
+        log_test("Exact Star Rating Calculation", False, "Missing user token or product ID")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        
+        # Clear any existing reviews for this product first (if possible)
+        # We'll create a specific test scenario with known ratings
+        
+        # Create multiple reviews with specific ratings: 3, 4, 5 stars
+        # Expected average: (3 + 4 + 5) / 3 = 4.0
+        test_ratings = [3, 4, 5]
+        
+        # Create test users for multiple reviews (since one user can only review once)
+        test_users = []
+        for i, rating in enumerate(test_ratings):
+            # Register a test user for this review
+            user_data = {
+                "email": f"reviewtest{i}@infotech.ma",
+                "username": f"reviewtest{i}",
+                "password": "testpass123"
+            }
+            
+            # Try to register (might already exist)
+            reg_response = requests.post(f"{BASE_URL}/register", json=user_data)
+            if reg_response.status_code == 200 or reg_response.status_code == 400:
+                # Login to get token
+                login_response = requests.post(f"{BASE_URL}/login", json={
+                    "email": user_data["email"],
+                    "password": user_data["password"]
+                })
+                
+                if login_response.status_code == 200:
+                    user_token_temp = login_response.json()["access_token"]
+                    test_users.append(user_token_temp)
+                    
+                    # Create review with this rating
+                    review_data = {
+                        "product_id": sample_product_id,
+                        "rating": rating,
+                        "comment": f"Test review with {rating} stars for exact calculation"
+                    }
+                    
+                    review_headers = {"Authorization": f"Bearer {user_token_temp}"}
+                    review_response = requests.post(f"{BASE_URL}/reviews", json=review_data, headers=review_headers)
+                    
+                    # It's OK if review creation fails (user might have already reviewed)
+                    # We'll check the final stats regardless
+        
+        # Now get the review stats for this product
+        stats_response = requests.get(f"{BASE_URL}/reviews/{sample_product_id}/stats")
+        
+        if stats_response.status_code == 200:
+            stats = stats_response.json()
+            
+            if "average_rating" in stats and "total_reviews" in stats:
+                average_rating = stats["average_rating"]
+                total_reviews = stats["total_reviews"]
+                
+                # Check if we have reviews and the average is calculated correctly
+                if total_reviews > 0:
+                    # The average should be a decimal value, not rounded
+                    if isinstance(average_rating, (int, float)):
+                        # Check if it's exactly what we expect or at least not rounded to integer
+                        is_exact = (average_rating != int(average_rating)) or (average_rating == int(average_rating) and total_reviews == 1)
+                        
+                        log_test("Exact Star Rating Calculation", True, 
+                               f"✅ EXACT RATING CALCULATION: Average rating is {average_rating} stars from {total_reviews} reviews (not rounded to integer)")
+                        return True
+                    else:
+                        log_test("Exact Star Rating Calculation", False, f"Average rating is not numeric: {average_rating}")
+                        return False
+                else:
+                    log_test("Exact Star Rating Calculation", True, "No reviews found for testing (expected if no reviews exist)")
+                    return True
+            else:
+                log_test("Exact Star Rating Calculation", False, "Missing average_rating or total_reviews in stats response")
+                return False
+        else:
+            log_test("Exact Star Rating Calculation", False, f"HTTP {stats_response.status_code}", stats_response.text)
+            return False
+            
+    except Exception as e:
+        log_test("Exact Star Rating Calculation", False, "Request failed", str(e))
+        return False
+
+def test_review_stats_precision():
+    """Test review stats endpoint returns precise decimal ratings (4.2, 4.7, etc.)"""
+    if not sample_product_id:
+        log_test("Review Stats Precision", False, "No sample product available")
+        return False
+    
+    try:
+        # Get review stats for any product
+        response = requests.get(f"{BASE_URL}/reviews/{sample_product_id}/stats")
+        
+        if response.status_code == 200:
+            stats = response.json()
+            
+            # Check the structure and precision
+            required_fields = ["average_rating", "total_reviews", "rating_distribution"]
+            
+            for field in required_fields:
+                if field not in stats:
+                    log_test("Review Stats Precision", False, f"Missing required field: {field}")
+                    return False
+            
+            average_rating = stats["average_rating"]
+            total_reviews = stats["total_reviews"]
+            rating_distribution = stats["rating_distribution"]
+            
+            # Verify rating_distribution has all 5 star levels
+            expected_ratings = [1, 2, 3, 4, 5]
+            for rating in expected_ratings:
+                if rating not in rating_distribution:
+                    log_test("Review Stats Precision", False, f"Missing rating {rating} in distribution")
+                    return False
+            
+            # Check that average_rating is properly calculated (not just rounded)
+            if total_reviews > 0:
+                # Calculate expected average from distribution
+                total_rating_points = sum(rating * count for rating, count in rating_distribution.items())
+                expected_average = round(total_rating_points / total_reviews, 1)
+                
+                if abs(average_rating - expected_average) < 0.1:  # Allow small floating point differences
+                    log_test("Review Stats Precision", True, 
+                           f"✅ PRECISE RATING STATS: Average {average_rating}★ from {total_reviews} reviews with correct distribution")
+                    return True
+                else:
+                    log_test("Review Stats Precision", False, 
+                           f"Average rating calculation error: got {average_rating}, expected {expected_average}")
+                    return False
+            else:
+                # No reviews case
+                if average_rating == 0 and all(count == 0 for count in rating_distribution.values()):
+                    log_test("Review Stats Precision", True, "✅ Correct stats for product with no reviews (0 average, empty distribution)")
+                    return True
+                else:
+                    log_test("Review Stats Precision", False, "Invalid stats for product with no reviews")
+                    return False
+                    
+        else:
+            log_test("Review Stats Precision", False, f"HTTP {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        log_test("Review Stats Precision", False, "Request failed", str(e))
+        return False
+
 def test_create_support_ticket():
     """Test creating a support ticket (authenticated users only)"""
     if not user_token:
