@@ -548,6 +548,8 @@ const Products = () => {
   const [priceRange, setPriceRange] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedSeries, setSelectedSeries] = useState('');
+  const [dynamicFilters, setDynamicFilters] = useState([]); // Nouveau: filtres dynamiques
+  const [selectedDynamicFilters, setSelectedDynamicFilters] = useState({}); // Nouveau: valeurs des filtres dynamiques
 
   const categories = ['CPU', 'GPU', 'RAM', 'MOTHERBOARD', 'STORAGE', 'PSU', 'CASE', 'COOLING'];
   const priceRanges = [
