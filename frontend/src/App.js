@@ -539,6 +539,7 @@ const AdminLogin = () => {
 
 // Products Component
 const Products = () => {
+  const { updateCartCount, triggerCartAnimation } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('');
