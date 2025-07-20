@@ -929,6 +929,7 @@ const Products = () => {
 
 // Product Detail Component
 const ProductDetail = ({ productId }) => {
+  const { updateCartCount, triggerCartAnimation } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -950,7 +951,24 @@ const ProductDetail = ({ productId }) => {
   const addToCart = async () => {
     try {
       await axios.post(`${API}/cart/add?product_id=${productId}&quantity=1`);
-      alert('Produit ajouté au panier !');
+      
+      // Déclencher l'animation et mettre à jour le compteur
+      triggerCartAnimation();
+      await updateCartCount();
+      
+      // Animation de succès
+      const button = event.target;
+      const originalText = button.textContent;
+      button.textContent = '✅ Ajouté au panier !';
+      button.classList.add('bg-green-600');
+      button.classList.remove('bg-blue-600');
+      
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('bg-green-600');
+        button.classList.add('bg-blue-600');
+      }, 2000);
+      
     } catch (error) {
       alert('Erreur lors de l\'ajout au panier');
     }
