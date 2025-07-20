@@ -1344,8 +1344,11 @@ const AdminPanel = () => {
   useEffect(() => {
     if (user && user.is_admin) {
       fetchProducts();
+      if (activeTab === 'promos') {
+        fetchPromoCodes();
+      }
     }
-  }, [user]);
+  }, [user, activeTab]);
 
   const fetchProducts = async () => {
     try {
@@ -1354,6 +1357,48 @@ const AdminPanel = () => {
     } catch (error) {
       console.error('Erreur lors du chargement des produits:', error);
     }
+  };
+
+  const fetchPromoCodes = async () => {
+    try {
+      // Since there's no GET endpoint for promo codes, we'll need to manage them locally
+      // or add the endpoint to the backend. For now, let's assume we have the endpoint
+      const response = await axios.get(`${API}/admin/promo-codes`);
+      setPromoCodes(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des codes promo:', error);
+      // If endpoint doesn't exist, we'll work with local state
+      setPromoCodes([]);
+    }
+  };
+
+  // Get unique brands from products
+  const getAvailableBrands = () => {
+    const brands = new Set();
+    products.forEach(product => brands.add(product.brand));
+    return Array.from(brands).sort();
+  };
+
+  // Filter products based on selected filters
+  const getFilteredProducts = () => {
+    return products.filter(product => {
+      const matchesCategory = !filterCategory || product.category === filterCategory;
+      const matchesBrand = !filterBrand || product.brand === filterBrand;
+      const matchesStock = !filterStockStatus || product.stock_status === filterStockStatus;
+      const matchesSearch = !searchAdmin || 
+        product.name.toLowerCase().includes(searchAdmin.toLowerCase()) ||
+        product.brand.toLowerCase().includes(searchAdmin.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchAdmin.toLowerCase());
+      
+      return matchesCategory && matchesBrand && matchesStock && matchesSearch;
+    });
+  };
+
+  const clearFilters = () => {
+    setFilterCategory('');
+    setFilterBrand('');
+    setFilterStockStatus('');
+    setSearchAdmin('');
   };
 
   const handleSubmit = async (e) => {
