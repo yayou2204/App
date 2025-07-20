@@ -1019,6 +1019,7 @@ const Products = () => {
                 setSelectedBrand('');
                 setSelectedSeries('');
                 setPriceRange('');
+                setSelectedDynamicFilters({});
               }}
               className="text-blue-600 hover:underline"
             >
