@@ -1518,6 +1518,18 @@ const AdminPanel = () => {
     discount_percentage: ''
   });
   
+  // Product Filters state
+  const [productFilters, setProductFilters] = useState([]);
+  const [showAddFilter, setShowAddFilter] = useState(false);
+  const [editingFilter, setEditingFilter] = useState(null);
+  const [filterForm, setFilterForm] = useState({
+    name: '',
+    type: 'select',
+    field: '',
+    values: []
+  });
+  const [newFilterValue, setNewFilterValue] = useState('');
+  
   const [productForm, setProductForm] = useState({
     name: '',
     category: 'CPU',
