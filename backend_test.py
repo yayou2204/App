@@ -339,6 +339,204 @@ def test_apply_promo_code():
         log_test("Apply Promo Code", False, "Request failed", str(e))
         return False
 
+def test_get_all_promo_codes():
+    """Test getting all promo codes (admin only)"""
+    if not admin_token:
+        log_test("Get All Promo Codes", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        response = requests.get(f"{BASE_URL}/admin/promo-codes", headers=headers)
+        
+        if response.status_code == 200:
+            promos = response.json()
+            if isinstance(promos, list):
+                log_test("Get All Promo Codes", True, f"Retrieved {len(promos)} promo codes")
+                return True
+            else:
+                log_test("Get All Promo Codes", False, "Invalid response format", str(promos))
+                return False
+        else:
+            log_test("Get All Promo Codes", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Get All Promo Codes", False, "Request failed", str(e))
+        return False
+
+def test_update_promo_code():
+    """Test updating a promo code (admin only)"""
+    if not admin_token:
+        log_test("Update Promo Code", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # First get all promo codes to find one to update
+        get_response = requests.get(f"{BASE_URL}/admin/promo-codes", headers=headers)
+        if get_response.status_code != 200:
+            log_test("Update Promo Code", False, "Could not fetch promo codes for testing")
+            return False
+        
+        promos = get_response.json()
+        if not promos:
+            log_test("Update Promo Code", True, "No promo codes available to update (expected if none exist)")
+            return True
+        
+        # Update the first promo code
+        promo_id = promos[0]["id"]
+        response = requests.put(f"{BASE_URL}/admin/promo-codes/{promo_id}?code=UPDATED15&discount_percentage=15", headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                log_test("Update Promo Code", True, "Promo code updated successfully")
+                return True
+            else:
+                log_test("Update Promo Code", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Update Promo Code", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Update Promo Code", False, "Request failed", str(e))
+        return False
+
+def test_toggle_promo_code():
+    """Test toggling promo code active status (admin only)"""
+    if not admin_token:
+        log_test("Toggle Promo Code", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # First get all promo codes to find one to toggle
+        get_response = requests.get(f"{BASE_URL}/admin/promo-codes", headers=headers)
+        if get_response.status_code != 200:
+            log_test("Toggle Promo Code", False, "Could not fetch promo codes for testing")
+            return False
+        
+        promos = get_response.json()
+        if not promos:
+            log_test("Toggle Promo Code", True, "No promo codes available to toggle (expected if none exist)")
+            return True
+        
+        # Toggle the first promo code
+        promo_id = promos[0]["id"]
+        current_status = promos[0].get("active", True)
+        new_status = not current_status
+        
+        response = requests.put(f"{BASE_URL}/admin/promo-codes/{promo_id}/toggle?active={str(new_status).lower()}", headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                action = "activated" if new_status else "deactivated"
+                log_test("Toggle Promo Code", True, f"Promo code {action} successfully")
+                return True
+            else:
+                log_test("Toggle Promo Code", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Toggle Promo Code", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Toggle Promo Code", False, "Request failed", str(e))
+        return False
+
+def test_delete_promo_code():
+    """Test deleting a promo code (admin only)"""
+    if not admin_token:
+        log_test("Delete Promo Code", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # Create a test promo code to delete
+        create_response = requests.post(f"{BASE_URL}/admin/promo-codes?code=DELETE_TEST&discount_percentage=5", headers=headers)
+        if create_response.status_code != 200:
+            log_test("Delete Promo Code", False, "Could not create test promo code for deletion")
+            return False
+        
+        created_promo = create_response.json()
+        promo_id = created_promo["id"]
+        
+        # Now delete it
+        response = requests.delete(f"{BASE_URL}/admin/promo-codes/{promo_id}", headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                log_test("Delete Promo Code", True, "Promo code deleted successfully")
+                return True
+            else:
+                log_test("Delete Promo Code", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Delete Promo Code", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Delete Promo Code", False, "Request failed", str(e))
+        return False
+
+def test_search_and_category_combined():
+    """Test product search with both search and category parameters"""
+    try:
+        # Search for AMD products in CPU category
+        response = requests.get(f"{BASE_URL}/products?search=AMD&category=CPU")
+        
+        if response.status_code == 200:
+            products = response.json()
+            if isinstance(products, list):
+                # Check that all returned products match both criteria
+                valid_results = all(
+                    product.get("category") == "CPU" and 
+                    ("AMD" in product.get("name", "") or "AMD" in product.get("brand", "") or "AMD" in product.get("description", ""))
+                    for product in products
+                ) if products else True
+                
+                if valid_results:
+                    log_test("Search and Category Combined", True, f"Combined search returned {len(products)} matching products")
+                    return True
+                else:
+                    log_test("Search and Category Combined", False, "Some products don't match search criteria")
+                    return False
+            else:
+                log_test("Search and Category Combined", False, "Invalid response format", str(products))
+                return False
+        else:
+            log_test("Search and Category Combined", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Search and Category Combined", False, "Request failed", str(e))
+        return False
+
+def test_invalid_promo_operations():
+    """Test error handling for invalid promo code operations"""
+    if not admin_token:
+        log_test("Invalid Promo Operations", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # Test updating non-existent promo code
+        fake_id = "non-existent-id"
+        response = requests.put(f"{BASE_URL}/admin/promo-codes/{fake_id}?code=FAKE&discount_percentage=10", headers=headers)
+        
+        if response.status_code == 404:
+            log_test("Invalid Promo Operations", True, "Correctly handled non-existent promo code update")
+            return True
+        else:
+            log_test("Invalid Promo Operations", False, f"Expected 404 for non-existent promo, got {response.status_code}")
+            return False
+    except Exception as e:
+        log_test("Invalid Promo Operations", False, "Request failed", str(e))
+        return False
+
 def test_configurator_categories():
     """Test getting configurator categories"""
     try:
