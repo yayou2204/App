@@ -427,12 +427,9 @@ def test_save_pc_configuration():
             log_test("Save PC Configuration", True, "No CPU products available for configuration testing")
             return True
         
-        config_data = {
-            "name": "Test Gaming Build",
-            "components": {"CPU": cpu_product["id"]}
-        }
+        components_data = {"CPU": cpu_product["id"]}
         
-        response = requests.post(f"{BASE_URL}/configurator/save", json=config_data, headers=headers)
+        response = requests.post(f"{BASE_URL}/configurator/save?name=Test Gaming Build", json=components_data, headers=headers)
         
         if response.status_code == 200:
             data = response.json()
