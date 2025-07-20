@@ -83,6 +83,7 @@ class ProductCreate(BaseModel):
     description: str
     image_base64: str = ""
     stock_quantity: int
+    generation: Optional[str] = None  # Génération (pour CPU et GPU uniquement)
     specifications: Dict[str, Any] = {}
     compatibility_requirements: Dict[str, Any] = {}
 
