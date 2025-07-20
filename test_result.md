@@ -171,7 +171,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -182,6 +182,9 @@ backend:
       - working: "NA"
         agent: "main"
         comment: "ENHANCED: Added full CRUD endpoints for promo codes management - GET all codes, PUT update code, DELETE code, PUT toggle status. Added complete admin interface for promo code management with create/edit/delete/toggle functionality."
+      - working: true
+        agent: "testing"
+        comment: "✅ ENHANCED TESTING COMPLETE: All new promo code endpoints tested successfully. GET /api/admin/promo-codes (list all), POST /api/admin/promo-codes (create), PUT /api/admin/promo-codes/{id} (update), DELETE /api/admin/promo-codes/{id} (delete), PUT /api/admin/promo-codes/{id}/toggle (toggle status) all working. Enhanced search functionality with search+category parameters also tested. 21/21 tests passed (100% success rate)."
 
 frontend:
   - task: "Homepage with Carousel"
