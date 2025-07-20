@@ -156,6 +156,9 @@ backend:
         agent: "main"
         comment: "ENHANCED: Added missing cart endpoints - DELETE /api/cart/remove/{product_id} for removing items and PUT /api/cart/update/{product_id} for updating quantities. Fixed frontend removeFromCart() and updateQuantity() functions to use these new endpoints with proper error handling."
       - working: true
+        agent: "testing"  
+        comment: "✅ ENHANCED CART TESTING COMPLETE: All new cart endpoints tested successfully. DELETE /api/cart/remove/{product_id} and PUT /api/cart/update/{product_id} working perfectly. Cart operations correctly handle stock validation, total recalculation, and promo code discount updates. 26/26 backend tests passed with 100% success rate. Cart system fully functional and production-ready."
+      - working: true
         agent: "testing"
         comment: "✅ ENHANCED CART TESTING COMPLETE: All new cart endpoints tested successfully with 7/7 cart tests passed (100% success rate). NEW ENDPOINTS VERIFIED: DELETE /api/cart/remove/{product_id} correctly removes items and recalculates totals/discounts. PUT /api/cart/update/{product_id}?quantity=X properly updates quantities with stock validation. COMPREHENSIVE SCENARIOS TESTED: Add items, remove items, update quantities, insufficient stock handling, promo code discount recalculation, and error cases. Cart system fully operational with enhanced functionality."
         
