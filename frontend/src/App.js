@@ -300,21 +300,17 @@ const Homepage = () => {
       {/* Stats Section */}
       <div className="py-16 bg-blue-900 text-white">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 text-center">
+          <div className="grid md:grid-cols-3 gap-8 text-center">
             <div>
               <div className="text-4xl font-bold mb-2">500+</div>
               <div className="text-blue-200">Composants en Stock</div>
-            </div>
-            <div>
-              <div className="text-4xl font-bold mb-2">2000+</div>
-              <div className="text-blue-200">Clients Satisfaits</div>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2">24/7</div>
               <div className="text-blue-200">Support Client</div>
             </div>
             <div>
-              <div className="text-4xl font-bold mb-2">48h</div>
+              <div className="text-4xl font-bold mb-2">96h</div>
               <div className="text-blue-200">Livraison Express</div>
             </div>
           </div>
