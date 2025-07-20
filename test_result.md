@@ -134,6 +134,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: Product management API fully functional. GET products, search by name/brand, category filtering, and admin-protected product creation all working. Sample products (AMD Ryzen 9 5900X, ASUS ROG STRIX B550-F) loaded correctly."
+      - working: true
+        agent: "testing"
+        comment: "✅ ENHANCED SEARCH TESTED: Enhanced search functionality verified. GET /api/products with search parameter, category parameter, and combined search+category parameters all working correctly. Search matches name, brand, and description fields with case-insensitive regex."
         
   - task: "Shopping Cart System"
     implemented: true
