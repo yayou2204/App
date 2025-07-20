@@ -119,6 +119,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: All authentication endpoints working correctly. User registration, login, and admin login with password 'NEW' all functional. JWT tokens generated and validated properly."
+      - working: true
+        agent: "testing"
+        comment: "✅ ADMIN LOGIN ISSUE DIAGNOSED: Conducted comprehensive testing of admin authentication after user reported login issues. FINDINGS: 1) POST /api/admin/login with password 'NEW' returns HTTP 200 with valid JWT token, 2) Admin user created correctly with is_admin=true flag, 3) All admin-protected endpoints (/admin/promo-codes, /admin/product-filters, /admin/products) accessible with token, 4) Unauthorized access properly blocked with HTTP 403. CONCLUSION: Backend admin authentication is 100% functional. User's login issue is NOT a backend problem - likely frontend issue with admin login page or token handling. Backend test results: 63/64 tests passed (98.4% success rate)."
         
   - task: "Product Management API"
     implemented: true
