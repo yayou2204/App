@@ -602,7 +602,20 @@ const Products = () => {
     
     if (urlSearch) setSearchQuery(urlSearch);
     if (urlCategory) setCategory(urlCategory);
+    
+    // Charger les filtres dynamiques au démarrage
+    loadDynamicFilters();
   }, []);
+
+  // Nouveau: Charger les filtres dynamiques depuis le backend
+  const loadDynamicFilters = async () => {
+    try {
+      const response = await axios.get(`${API}/product-filters`);
+      setDynamicFilters(response.data.filter(filter => filter.active)); // Seulement les filtres actifs
+    } catch (error) {
+      console.error('Erreur lors du chargement des filtres:', error);
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
