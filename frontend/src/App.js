@@ -496,24 +496,72 @@ const AdminLogin = () => {
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
-    console.log('🔍 Admin form submit triggered');
+    console.log('🔍 React handleSubmit called!');
     e.preventDefault();
-    console.log('🔍 Password:', password);
-    console.log('🔍 API URL:', `${API}/admin/login`);
     
     try {
-      console.log('🔍 Sending POST request to admin login...');
+      console.log('🔍 Making request to:', `${API}/admin/login`);
       const response = await axios.post(`${API}/admin/login`, { password });
-      console.log('🔍 Login response:', response.data);
+      console.log('🔍 Response received:', response.data);
       
       login(response.data.access_token, response.data.user);
-      console.log('🔍 Login context updated, redirecting...');
       window.location.href = '/admin';
     } catch (error) {
-      console.error('🔍 Admin login error:', error);
+      console.error('🔍 Error:', error);
       setError('Mot de passe administrateur incorrect');
     }
   };
+
+  // Fallback avec JavaScript pur au cas où React ne marche pas
+  useEffect(() => {
+    const form = document.querySelector('form');
+    if (form) {
+      console.log('🔍 Adding native form listener');
+      const nativeHandler = async (e) => {
+        e.preventDefault();
+        console.log('🔍 Native form handler called!');
+        
+        const passwordInput = document.querySelector('input[type="password"]');
+        const password = passwordInput?.value;
+        
+        if (!password) {
+          alert('Veuillez entrer le mot de passe');
+          return;
+        }
+        
+        try {
+          console.log('🔍 Native request to:', `${BACKEND_URL}/api/admin/login`);
+          const response = await fetch(`${BACKEND_URL}/api/admin/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ password })
+          });
+          
+          const data = await response.json();
+          console.log('🔍 Native response:', data);
+          
+          if (response.ok) {
+            // Store tokens manually
+            localStorage.setItem('token', data.access_token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            
+            // Redirect to admin
+            window.location.href = '/admin';
+          } else {
+            alert('Mot de passe administrateur incorrect');
+          }
+        } catch (error) {
+          console.error('🔍 Native error:', error);
+          alert('Erreur de connexion');
+        }
+      };
+      
+      form.addEventListener('submit', nativeHandler);
+      return () => form.removeEventListener('submit', nativeHandler);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12">
