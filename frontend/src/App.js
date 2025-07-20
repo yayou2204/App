@@ -1178,7 +1178,7 @@ const ProductDetail = ({ productId }) => {
   const [reviewStats, setReviewStats] = useState(null);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({
-    rating: 5,
+    rating: 0,
     comment: ''
   });
 
