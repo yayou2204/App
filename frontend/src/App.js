@@ -633,6 +633,16 @@ const Products = () => {
       if (category) params.append('category', category);
       if (searchQuery) params.append('search', searchQuery);
       
+      // Ajouter les filtres dynamiques
+      Object.entries(selectedDynamicFilters).forEach(([filterId, value]) => {
+        if (value) {
+          const filter = dynamicFilters.find(f => f.id === filterId);
+          if (filter) {
+            params.append(`filter_${filter.field.toLowerCase().replace(/\s+/g, '_')}`, value);
+          }
+        }
+      });
+      
       const response = await axios.get(`${API}/products?${params}`);
       setProducts(response.data);
     } catch (error) {
