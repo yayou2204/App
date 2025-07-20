@@ -975,10 +975,15 @@ def run_all_tests():
     test_create_product()
     
     # Shopping Cart Tests
-    print("🛒 SHOPPING CART TESTS")
+    print("🛒 ENHANCED SHOPPING CART TESTS")
     print("-" * 40)
     test_add_to_cart()
     test_get_cart()
+    test_remove_from_cart()
+    test_update_cart_quantity()
+    test_cart_quantity_insufficient_stock()
+    test_cart_operations_with_promo()
+    test_remove_nonexistent_cart_item()
     
     # Enhanced Promo Code Tests
     print("🎫 ENHANCED PROMO CODE TESTS")
