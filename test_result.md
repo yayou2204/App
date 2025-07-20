@@ -372,6 +372,18 @@ frontend:
         agent: "testing"
         comment: "✅ BACKEND TESTING COMPLETE: Review stats system fully tested and operational. GET /api/reviews/{product_id}/stats endpoint returns exact decimal ratings (4.0, 4.2, etc.) with proper precision. Tested with multiple reviews (ratings 3,4,5 = average 4.0) and confirmed calculations are exact, not rounded. Rating distribution correctly structured with all 5 star levels. Backend supports precise star synchronization - frontend can now display exact ratings like 4.2★ instead of rounded 4★."
 
+  - task: "Suppression Marques partenaires page produits"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "SUPPRESSION MARQUES PARTENAIRES: Supprimé la carte 'Marques partenaires' de la section statistiques de la page produits. Modifié la grille de 4 colonnes à 3 colonnes pour conserver un affichage équilibré avec seulement 'Total produits', 'Produits filtrés' et 'En stock'."
+
   - task: "Correction option Bientôt disponible dans panel admin"
     implemented: true
     working: true
