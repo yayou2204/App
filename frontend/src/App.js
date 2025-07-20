@@ -1129,6 +1129,16 @@ const ProductDetail = ({ productId }) => {
         <div>
           <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
           <p className="text-gray-600 mb-4">{product.brand}</p>
+          
+          {/* Tag Génération - Uniquement pour CPU et GPU */}
+          {product.generation && (product.category === 'CPU' || product.category === 'GPU') && (
+            <div className="mb-4">
+              <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">
+                {product.category === 'CPU' ? '🔧' : '🎮'} Génération: {product.generation}
+              </span>
+            </div>
+          )}
+          
           <p className="text-blue-600 font-bold text-3xl mb-4">{product.price} MAD</p>
           
           {/* Stock Status */}
