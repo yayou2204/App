@@ -7,6 +7,7 @@ const API = `${BACKEND_URL}/api`;
 
 // Auth Context
 const AuthContext = createContext();
+const CartContext = createContext();
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -46,7 +47,44 @@ const AuthProvider = ({ children }) => {
   );
 };
 
+const CartProvider = ({ children }) => {
+  const [cartCount, setCartCount] = useState(0);
+  const [showCartAnimation, setShowCartAnimation] = useState(false);
+
+  const updateCartCount = async () => {
+    try {
+      const response = await axios.get(`${API}/cart`);
+      const totalItems = response.data.items.reduce((sum, item) => sum + item.quantity, 0);
+      setCartCount(totalItems);
+    } catch (error) {
+      console.error('Erreur lors du chargement du panier:', error);
+      setCartCount(0);
+    }
+  };
+
+  const triggerCartAnimation = () => {
+    setShowCartAnimation(true);
+    setTimeout(() => setShowCartAnimation(false), 600);
+  };
+
+  useEffect(() => {
+    updateCartCount();
+  }, []);
+
+  return (
+    <CartContext.Provider value={{ 
+      cartCount, 
+      updateCartCount, 
+      triggerCartAnimation, 
+      showCartAnimation 
+    }}>
+      {children}
+    </CartContext.Provider>
+  );
+};
+
 const useAuth = () => useContext(AuthContext);
+const useCart = () => useContext(CartContext);
 
 // Header Component
 const Header = () => {
