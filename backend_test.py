@@ -2311,17 +2311,17 @@ def test_review_stats_precision():
             total_reviews = stats["total_reviews"]
             rating_distribution = stats["rating_distribution"]
             
-            # Verify rating_distribution has all 5 star levels
-            expected_ratings = [1, 2, 3, 4, 5]
+            # Verify rating_distribution has all 5 star levels (as strings, not integers)
+            expected_ratings = ["1", "2", "3", "4", "5"]
             for rating in expected_ratings:
                 if rating not in rating_distribution:
-                    log_test("Review Stats Precision", False, f"Missing rating {rating} in distribution")
+                    log_test("Review Stats Precision", False, f"Missing rating {rating} in distribution. Got keys: {list(rating_distribution.keys())}")
                     return False
             
             # Check that average_rating is properly calculated (not just rounded)
             if total_reviews > 0:
-                # Calculate expected average from distribution
-                total_rating_points = sum(rating * count for rating, count in rating_distribution.items())
+                # Calculate expected average from distribution (convert string keys to int)
+                total_rating_points = sum(int(rating) * count for rating, count in rating_distribution.items())
                 expected_average = round(total_rating_points / total_reviews, 1)
                 
                 if abs(average_rating - expected_average) < 0.1:  # Allow small floating point differences
