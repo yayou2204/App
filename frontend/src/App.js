@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext, createContext } from "react";
 import "./App.css";
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://2e732031-01fc-424e-b826-f415abaa8c9e.preview.emergentagent.com';
 const API = `${BACKEND_URL}/api`;
 
 console.log('BACKEND_URL:', BACKEND_URL);
