@@ -210,6 +210,88 @@ const Homepage = () => {
           </div>
         </div>
       </div>
+
+      {/* About Section */}
+      <div className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-8">Votre Partenaire Gaming au Maroc</h2>
+            <p className="text-lg text-gray-700 mb-6 leading-relaxed">
+              INFOTECH.MA est le spécialiste marocain des composants PC gaming. Depuis notre création, nous nous engageons 
+              à fournir aux gamers marocains les meilleurs composants du marché avec un service client exceptionnel.
+            </p>
+            <p className="text-lg text-gray-700 mb-8 leading-relaxed">
+              Que vous soyez un gamer occasionnel ou un passionné d'e-sport, notre équipe d'experts vous accompagne 
+              dans le choix et l'assemblage de votre configuration parfaite. Nous travaillons avec les plus grandes 
+              marques comme AMD, Intel, NVIDIA, ASUS, MSI, et bien d'autres.
+            </p>
+            <div className="grid md:grid-cols-2 gap-8 text-left">
+              <div>
+                <h3 className="text-xl font-semibold mb-4 text-blue-600">Notre Mission</h3>
+                <p className="text-gray-700">
+                  Démocratiser le gaming haute performance au Maroc en proposant des composants de qualité 
+                  à des prix compétitifs, avec des conseils personnalisés et un service après-vente irréprochable.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold mb-4 text-blue-600">Notre Engagement</h3>
+                <p className="text-gray-700">
+                  Garantir la compatibilité de chaque configuration, offrir les meilleurs prix du marché, 
+                  et assurer une livraison rapide et sécurisée dans tout le Royaume.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Section */}
+      <div className="py-16 bg-blue-900 text-white">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-4xl font-bold mb-2">500+</div>
+              <div className="text-blue-200">Composants en Stock</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold mb-2">2000+</div>
+              <div className="text-blue-200">Clients Satisfaits</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold mb-2">24/7</div>
+              <div className="text-blue-200">Support Client</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold mb-2">48h</div>
+              <div className="text-blue-200">Livraison Express</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="py-16 bg-gray-100">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-4">Prêt à Construire Votre PC Gaming ?</h2>
+          <p className="text-xl text-gray-600 mb-8">
+            Utilisez notre configurateur intelligent pour créer la configuration parfaite selon vos besoins et votre budget.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a 
+              href="/configurator"
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Configurez Maintenant
+            </a>
+            <a 
+              href="/products"
+              className="bg-gray-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-700 transition-colors"
+            >
+              Parcourir les Produits
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
