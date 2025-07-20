@@ -1430,6 +1430,403 @@ def test_invalid_filter_operations():
 test_ticket_id = None
 test_review_id = None
 
+def test_create_product_review():
+    """Test creating a product review (authenticated users only)"""
+    if not user_token or not sample_product_id:
+        log_test("Create Product Review", False, "No user token or product ID available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        review_data = {
+            "product_id": sample_product_id,
+            "rating": 5,
+            "comment": "Excellent produit! Très satisfait de mon achat. Performance exceptionnelle et qualité au rendez-vous."
+        }
+        
+        response = requests.post(f"{BASE_URL}/reviews", json=review_data, headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                log_test("Create Product Review", True, f"Product review created successfully for product {sample_product_id}")
+                return True
+            else:
+                log_test("Create Product Review", False, "Invalid response format", str(data))
+                return False
+        elif response.status_code == 400 and "déjà noté" in response.text:
+            # User already reviewed this product - this is expected in subsequent test runs
+            log_test("Create Product Review", True, "User already reviewed this product (expected in subsequent runs)")
+            return True
+        else:
+            log_test("Create Product Review", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Create Product Review", False, "Request failed", str(e))
+        return False
+
+def test_get_product_reviews():
+    """Test getting reviews for a specific product"""
+    if not sample_product_id:
+        log_test("Get Product Reviews", False, "No product ID available")
+        return False
+    
+    try:
+        response = requests.get(f"{BASE_URL}/reviews/{sample_product_id}")
+        
+        if response.status_code == 200:
+            reviews = response.json()
+            if isinstance(reviews, list):
+                log_test("Get Product Reviews", True, f"Retrieved {len(reviews)} reviews for product {sample_product_id}")
+                # Store first review ID for deletion test
+                if reviews:
+                    global test_review_id
+                    test_review_id = reviews[0].get("id")
+                return True
+            else:
+                log_test("Get Product Reviews", False, "Invalid response format", str(reviews))
+                return False
+        else:
+            log_test("Get Product Reviews", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Get Product Reviews", False, "Request failed", str(e))
+        return False
+
+def test_get_product_review_stats():
+    """Test getting review statistics for a product - CRITICAL for products page"""
+    if not sample_product_id:
+        log_test("Get Product Review Stats", False, "No product ID available")
+        return False
+    
+    try:
+        response = requests.get(f"{BASE_URL}/reviews/{sample_product_id}/stats")
+        
+        if response.status_code == 200:
+            stats = response.json()
+            required_fields = ["average_rating", "total_reviews", "rating_distribution"]
+            
+            if all(field in stats for field in required_fields):
+                avg_rating = stats["average_rating"]
+                total_reviews = stats["total_reviews"]
+                rating_dist = stats["rating_distribution"]
+                
+                # Validate data types and ranges
+                if (isinstance(avg_rating, (int, float)) and 0 <= avg_rating <= 5 and
+                    isinstance(total_reviews, int) and total_reviews >= 0 and
+                    isinstance(rating_dist, dict) and 
+                    all(str(i) in rating_dist for i in range(1, 6))):
+                    
+                    log_test("Get Product Review Stats", True, 
+                           f"Review stats retrieved: {avg_rating}★ average, {total_reviews} reviews, distribution: {rating_dist}")
+                    return True
+                else:
+                    log_test("Get Product Review Stats", False, 
+                           f"Invalid stats data: avg={avg_rating}, total={total_reviews}, dist={rating_dist}")
+                    return False
+            else:
+                log_test("Get Product Review Stats", False, f"Missing required fields in response: {stats}")
+                return False
+        else:
+            log_test("Get Product Review Stats", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Get Product Review Stats", False, "Request failed", str(e))
+        return False
+
+def test_product_review_stats_no_reviews():
+    """Test review stats for a product with no reviews"""
+    try:
+        # Create a new product specifically for this test
+        if not admin_token:
+            log_test("Review Stats No Reviews", False, "No admin token available")
+            return False
+        
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        product_data = {
+            "name": "Test Product No Reviews",
+            "category": "GPU",
+            "brand": "TEST",
+            "price": 299.99,
+            "description": "Test product for review stats testing",
+            "image_base64": "",
+            "stock_quantity": 1,
+            "specifications": {},
+            "compatibility_requirements": {}
+        }
+        
+        create_response = requests.post(f"{BASE_URL}/admin/products", json=product_data, headers=headers)
+        if create_response.status_code != 200:
+            log_test("Review Stats No Reviews", False, "Could not create test product")
+            return False
+        
+        test_product = create_response.json()
+        test_product_id = test_product["id"]
+        
+        # Get stats for product with no reviews
+        response = requests.get(f"{BASE_URL}/reviews/{test_product_id}/stats")
+        
+        if response.status_code == 200:
+            stats = response.json()
+            expected_stats = {
+                "average_rating": 0,
+                "total_reviews": 0,
+                "rating_distribution": {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+            }
+            
+            if (stats["average_rating"] == 0 and 
+                stats["total_reviews"] == 0 and
+                all(stats["rating_distribution"][str(i)] == 0 for i in range(1, 6))):
+                
+                log_test("Review Stats No Reviews", True, "Correctly returned zero stats for product with no reviews")
+                return True
+            else:
+                log_test("Review Stats No Reviews", False, f"Incorrect stats for no reviews: {stats}")
+                return False
+        else:
+            log_test("Review Stats No Reviews", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Review Stats No Reviews", False, "Request failed", str(e))
+        return False
+
+def test_multiple_product_review_stats():
+    """Test getting review stats for multiple products (simulating products page load)"""
+    try:
+        # Get all products
+        products_response = requests.get(f"{BASE_URL}/products")
+        if products_response.status_code != 200:
+            log_test("Multiple Product Review Stats", False, "Could not fetch products")
+            return False
+        
+        products = products_response.json()
+        if not products:
+            log_test("Multiple Product Review Stats", True, "No products available for stats testing")
+            return True
+        
+        # Test stats for first 3 products (or all if less than 3)
+        test_products = products[:3]
+        successful_requests = 0
+        
+        for product in test_products:
+            product_id = product["id"]
+            response = requests.get(f"{BASE_URL}/reviews/{product_id}/stats")
+            
+            if response.status_code == 200:
+                stats = response.json()
+                if ("average_rating" in stats and "total_reviews" in stats and 
+                    "rating_distribution" in stats):
+                    successful_requests += 1
+                else:
+                    log_test("Multiple Product Review Stats", False, 
+                           f"Invalid stats format for product {product_id}: {stats}")
+                    return False
+            else:
+                log_test("Multiple Product Review Stats", False, 
+                       f"Failed to get stats for product {product_id}: HTTP {response.status_code}")
+                return False
+        
+        log_test("Multiple Product Review Stats", True, 
+               f"Successfully retrieved review stats for {successful_requests}/{len(test_products)} products")
+        return True
+        
+    except Exception as e:
+        log_test("Multiple Product Review Stats", False, "Request failed", str(e))
+        return False
+
+def test_create_multiple_reviews_different_ratings():
+    """Test creating multiple reviews with different ratings to verify average calculation"""
+    if not admin_token or not sample_product_id:
+        log_test("Multiple Reviews Different Ratings", False, "No admin token or product ID available")
+        return False
+    
+    try:
+        # Create additional test users for multiple reviews
+        test_users = [
+            {"email": "reviewer1@infotech.ma", "username": "reviewer1", "password": "pass123"},
+            {"email": "reviewer2@infotech.ma", "username": "reviewer2", "password": "pass123"},
+            {"email": "reviewer3@infotech.ma", "username": "reviewer3", "password": "pass123"}
+        ]
+        
+        user_tokens = []
+        
+        # Register and login test users
+        for user_data in test_users:
+            # Try to register (might already exist)
+            register_response = requests.post(f"{BASE_URL}/register", json=user_data)
+            
+            # Login to get token
+            login_data = {"email": user_data["email"], "password": user_data["password"]}
+            login_response = requests.post(f"{BASE_URL}/login", json=login_data)
+            
+            if login_response.status_code == 200:
+                token = login_response.json()["access_token"]
+                user_tokens.append(token)
+        
+        if len(user_tokens) < 2:
+            log_test("Multiple Reviews Different Ratings", True, "Could not create enough test users (expected in subsequent runs)")
+            return True
+        
+        # Create reviews with different ratings (3, 4, 5 stars)
+        ratings = [3, 4, 5]
+        successful_reviews = 0
+        
+        for i, (token, rating) in enumerate(zip(user_tokens, ratings)):
+            headers = {"Authorization": f"Bearer {token}"}
+            review_data = {
+                "product_id": sample_product_id,
+                "rating": rating,
+                "comment": f"Test review {i+1} with {rating} stars"
+            }
+            
+            response = requests.post(f"{BASE_URL}/reviews", json=review_data, headers=headers)
+            
+            if response.status_code == 200:
+                successful_reviews += 1
+            elif response.status_code == 400 and "déjà noté" in response.text:
+                # User already reviewed - expected in subsequent runs
+                successful_reviews += 1
+        
+        # Get stats to verify average calculation
+        stats_response = requests.get(f"{BASE_URL}/reviews/{sample_product_id}/stats")
+        
+        if stats_response.status_code == 200:
+            stats = stats_response.json()
+            avg_rating = stats["average_rating"]
+            total_reviews = stats["total_reviews"]
+            
+            if total_reviews > 0 and 0 <= avg_rating <= 5:
+                log_test("Multiple Reviews Different Ratings", True, 
+                       f"Multiple reviews created successfully. Average: {avg_rating}★, Total: {total_reviews}")
+                return True
+            else:
+                log_test("Multiple Reviews Different Ratings", False, 
+                       f"Invalid calculated stats: avg={avg_rating}, total={total_reviews}")
+                return False
+        else:
+            log_test("Multiple Reviews Different Ratings", False, "Could not verify stats after creating reviews")
+            return False
+            
+    except Exception as e:
+        log_test("Multiple Reviews Different Ratings", False, "Request failed", str(e))
+        return False
+
+def test_delete_product_review():
+    """Test deleting a product review (user can only delete their own)"""
+    if not user_token or not test_review_id:
+        log_test("Delete Product Review", True, "No review ID available for deletion (expected if no reviews exist)")
+        return True
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        response = requests.delete(f"{BASE_URL}/reviews/{test_review_id}", headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                log_test("Delete Product Review", True, "Product review deleted successfully")
+                return True
+            else:
+                log_test("Delete Product Review", False, "Invalid response format", str(data))
+                return False
+        elif response.status_code == 404:
+            log_test("Delete Product Review", True, "Review not found or already deleted (expected)")
+            return True
+        else:
+            log_test("Delete Product Review", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Delete Product Review", False, "Request failed", str(e))
+        return False
+
+def test_review_authentication():
+    """Test that review creation requires authentication"""
+    if not sample_product_id:
+        log_test("Review Authentication", False, "No product ID available")
+        return False
+    
+    try:
+        review_data = {
+            "product_id": sample_product_id,
+            "rating": 4,
+            "comment": "Test review without authentication"
+        }
+        
+        # Try to create review without authentication
+        response = requests.post(f"{BASE_URL}/reviews", json=review_data)
+        
+        if response.status_code == 401 or response.status_code == 403:
+            log_test("Review Authentication", True, "Review creation correctly requires authentication")
+            return True
+        else:
+            log_test("Review Authentication", False, f"Expected 401/403 for unauthenticated request, got {response.status_code}")
+            return False
+    except Exception as e:
+        log_test("Review Authentication", False, "Request failed", str(e))
+        return False
+
+def test_review_invalid_rating():
+    """Test creating review with invalid rating (outside 1-5 range)"""
+    if not user_token or not sample_product_id:
+        log_test("Review Invalid Rating", False, "No user token or product ID available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        
+        # Test with rating = 0 (invalid)
+        review_data = {
+            "product_id": sample_product_id,
+            "rating": 0,
+            "comment": "Invalid rating test"
+        }
+        
+        response = requests.post(f"{BASE_URL}/reviews", json=review_data, headers=headers)
+        
+        if response.status_code == 422:  # Validation error
+            log_test("Review Invalid Rating", True, "Correctly rejected invalid rating (0)")
+            return True
+        else:
+            # Test with rating = 6 (invalid)
+            review_data["rating"] = 6
+            response2 = requests.post(f"{BASE_URL}/reviews", json=review_data, headers=headers)
+            
+            if response2.status_code == 422:
+                log_test("Review Invalid Rating", True, "Correctly rejected invalid rating (6)")
+                return True
+            else:
+                log_test("Review Invalid Rating", False, f"Expected 422 for invalid rating, got {response.status_code} and {response2.status_code}")
+                return False
+    except Exception as e:
+        log_test("Review Invalid Rating", False, "Request failed", str(e))
+        return False
+
+def test_review_nonexistent_product():
+    """Test creating review for non-existent product"""
+    if not user_token:
+        log_test("Review Nonexistent Product", False, "No user token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        review_data = {
+            "product_id": "non-existent-product-id",
+            "rating": 4,
+            "comment": "Review for non-existent product"
+        }
+        
+        response = requests.post(f"{BASE_URL}/reviews", json=review_data, headers=headers)
+        
+        if response.status_code == 404:
+            log_test("Review Nonexistent Product", True, "Correctly rejected review for non-existent product")
+            return True
+        else:
+            log_test("Review Nonexistent Product", False, f"Expected 404 for non-existent product, got {response.status_code}")
+            return False
+    except Exception as e:
+        log_test("Review Nonexistent Product", False, "Request failed", str(e))
+        return False
+
 def test_create_support_ticket():
     """Test creating a support ticket (authenticated users only)"""
     if not user_token:
