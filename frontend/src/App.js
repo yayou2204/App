@@ -619,12 +619,13 @@ const Products = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [category, searchQuery]);
+  }, [category, searchQuery, selectedDynamicFilters]);
 
   useEffect(() => {
     // Reset brand and series filters when category changes
     setSelectedBrand('');
     setSelectedSeries('');
+    setSelectedDynamicFilters({}); // Reset des filtres dynamiques aussi
   }, [category]);
 
   const fetchProducts = async () => {
