@@ -1103,7 +1103,7 @@ const Products = () => {
       {/* Product Statistics */}
       <div className="mt-12 bg-blue-50 p-6 rounded-lg">
         <h3 className="text-xl font-semibold mb-4 text-blue-800">Statistiques des Produits</h3>
-        <div className="grid md:grid-cols-4 gap-4 text-center">
+        <div className="grid md:grid-cols-3 gap-4 text-center">
           <div className="bg-white p-4 rounded">
             <div className="text-2xl font-bold text-blue-600">{products.length}</div>
             <div className="text-gray-600">Total produits</div>
@@ -1117,12 +1117,6 @@ const Products = () => {
               {products.filter(p => p.stock_status === 'in_stock').length}
             </div>
             <div className="text-gray-600">En stock</div>
-          </div>
-          <div className="bg-white p-4 rounded">
-            <div className="text-2xl font-bold text-orange-600">
-              {new Set(products.map(p => p.brand)).size}
-            </div>
-            <div className="text-gray-600">Marques partenaires</div>
           </div>
         </div>
       </div>
