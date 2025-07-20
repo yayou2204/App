@@ -288,7 +288,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Promo Code System (backend)"
     - "Admin Panel for Product Management (with filters)"
     - "Admin Panel for Promo Code Management"
     - "Product Catalog and Search (fixed URL params)"
