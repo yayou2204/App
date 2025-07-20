@@ -89,6 +89,7 @@ const useCart = () => useContext(CartContext);
 // Header Component
 const Header = () => {
   const { user, logout } = useAuth();
+  const { cartCount, showCartAnimation } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = (e) => {
@@ -128,7 +129,19 @@ const Header = () => {
             <a href="/configurator" className="hover:text-blue-300">Configurateur</a>
             {user ? (
               <div className="flex items-center space-x-4">
-                <a href="/cart" className="hover:text-blue-300">Panier</a>
+                <a href="/cart" className="hover:text-blue-300 relative group">
+                  <div className="flex items-center space-x-1">
+                    <span>🛒</span>
+                    <span>Panier</span>
+                    {cartCount > 0 && (
+                      <span className={`inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full min-w-[20px] h-5 transition-transform duration-300 ${
+                        showCartAnimation ? 'animate-bounce scale-125' : ''
+                      }`}>
+                        {cartCount}
+                      </span>
+                    )}
+                  </div>
+                </a>
                 <span className="text-blue-300">Bonjour, {user.username}</span>
                 {user.is_admin && <a href="/admin" className="bg-red-600 px-3 py-1 rounded hover:bg-red-700">Admin</a>}
                 <button onClick={logout} className="bg-red-600 px-3 py-1 rounded hover:bg-red-700">Déconnexion</button>
