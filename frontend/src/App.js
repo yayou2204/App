@@ -1927,7 +1927,7 @@ const AdminPanel = () => {
 
   const handleAdminResponse = async (ticketId) => {
     try {
-      await axios.post(`${API}/admin/support/tickets/${ticketId}/respond`, {
+      await axios.put(`${API}/admin/support/tickets/${ticketId}/respond?admin_password=NEW`, {
         admin_response: adminResponse
       });
       alert('Réponse envoyée avec succès !');
@@ -1942,9 +1942,7 @@ const AdminPanel = () => {
 
   const updateTicketStatus = async (ticketId, status) => {
     try {
-      await axios.put(`${API}/admin/support/tickets/${ticketId}/status`, {
-        status: status
-      });
+      await axios.put(`${API}/admin/support/tickets/${ticketId}/status?admin_password=NEW&status=${status}`);
       alert('Statut mis à jour avec succès !');
       fetchSupportTickets();
     } catch (error) {
