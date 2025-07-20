@@ -92,6 +92,8 @@ def test_user_login():
         if response.status_code == 200:
             data = response.json()
             if "access_token" in data:
+                global user_token
+                user_token = data["access_token"]  # Set token for subsequent tests
                 log_test("User Login", True, f"Login successful for user: {data['user']['username']}")
                 return True
             else:
