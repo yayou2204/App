@@ -1442,9 +1442,19 @@ const ProductDetail = ({ productId }) => {
             <h3 className="text-lg font-semibold mb-4">Ajouter un avis</h3>
             <form onSubmit={handleReviewSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Note</label>
+                <label className="block text-sm font-medium mb-2">
+                  Note {reviewForm.rating === 0 && <span className="text-red-500">*</span>}
+                </label>
                 {renderRatingStars(reviewForm.rating, (rating) => 
                   setReviewForm({...reviewForm, rating})
+                )}
+                {reviewForm.rating === 0 && (
+                  <p className="text-sm text-gray-500 mt-1">Cliquez sur les étoiles pour donner votre note</p>
+                )}
+                {reviewForm.rating > 0 && (
+                  <p className="text-sm text-yellow-600 mt-1">
+                    Votre note: {reviewForm.rating} étoile{reviewForm.rating > 1 ? 's' : ''}
+                  </p>
                 )}
               </div>
               <div className="mb-4">
