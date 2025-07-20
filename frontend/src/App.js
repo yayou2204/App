@@ -1315,6 +1315,21 @@ const AdminPanel = () => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   
+  // Product filters
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterBrand, setFilterBrand] = useState('');
+  const [filterStockStatus, setFilterStockStatus] = useState('');
+  const [searchAdmin, setSearchAdmin] = useState('');
+  
+  // Promo codes state
+  const [promoCodes, setPromoCodes] = useState([]);
+  const [showAddPromo, setShowAddPromo] = useState(false);
+  const [editingPromo, setEditingPromo] = useState(null);
+  const [promoForm, setPromoForm] = useState({
+    code: '',
+    discount_percentage: ''
+  });
+  
   const [productForm, setProductForm] = useState({
     name: '',
     category: 'CPU',
