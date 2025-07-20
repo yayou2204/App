@@ -420,7 +420,10 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Synchronisation des étoiles avec les notes exactes"  
+    - "Suppression Marques partenaires page produits"
+    - "Correction option Bientôt disponible dans panel admin"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
