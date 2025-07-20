@@ -1687,6 +1687,104 @@ const AdminPanel = () => {
     }
   };
 
+  // Product Filters functions
+  const handleFilterSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const formData = {
+        name: filterForm.name,
+        type: filterForm.type,
+        field: filterForm.field,
+        values: filterForm.values
+      };
+
+      if (editingFilter) {
+        await axios.put(`${API}/admin/product-filters/${editingFilter.id}`, null, {
+          params: formData
+        });
+        alert('Filtre modifié avec succès !');
+      } else {
+        await axios.post(`${API}/admin/product-filters`, null, {
+          params: formData
+        });
+        alert('Filtre créé avec succès !');
+      }
+      
+      resetFilterForm();
+      fetchProductFilters();
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Erreur lors de l\'opération');
+    }
+  };
+
+  const resetFilterForm = () => {
+    setFilterForm({
+      name: '',
+      type: 'select',
+      field: '',
+      values: []
+    });
+    setNewFilterValue('');
+    setShowAddFilter(false);
+    setEditingFilter(null);
+  };
+
+  const editFilter = (filter) => {
+    setFilterForm({
+      name: filter.name,
+      type: filter.type,
+      field: filter.field,
+      values: [...filter.values]
+    });
+    setEditingFilter(filter);
+    setShowAddFilter(true);
+  };
+
+  const deleteFilter = async (filterId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce filtre ?')) return;
+    
+    try {
+      await axios.delete(`${API}/admin/product-filters/${filterId}`);
+      alert('Filtre supprimé avec succès !');
+      fetchProductFilters();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  const toggleFilterStatus = async (filterId, currentStatus) => {
+    try {
+      await axios.put(`${API}/admin/product-filters/${filterId}/toggle`, null, {
+        params: { active: !currentStatus }
+      });
+      alert(`Filtre ${!currentStatus ? 'activé' : 'désactivé'} avec succès !`);
+      fetchProductFilters();
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Erreur lors du changement de statut');
+    }
+  };
+
+  const addFilterValue = () => {
+    if (newFilterValue.trim() && !filterForm.values.includes(newFilterValue.trim())) {
+      setFilterForm({
+        ...filterForm,
+        values: [...filterForm.values, newFilterValue.trim()]
+      });
+      setNewFilterValue('');
+    }
+  };
+
+  const removeFilterValue = (valueToRemove) => {
+    setFilterForm({
+      ...filterForm,
+      values: filterForm.values.filter(value => value !== valueToRemove)
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
