@@ -178,6 +178,11 @@ const Homepage = () => {
       url: "https://images.unsplash.com/photo-1603732551681-2e91159b9dc2",
       title: "Composants de Qualité",
       description: "Les meilleures marques pour votre configuration"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1485083269755-a7b559a4fe5e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwyfHxjb25zdHJ1Y3Rpb258ZW58MHx8fHwxNzUyOTg3MDEzfDA&ixlib=rb-4.1.0&q=85",
+      title: "Nouvelle Boutique",
+      description: "Ouvre en 2026 - Restez connectés pour plus d'informations"
     }
   ];
 
