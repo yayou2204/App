@@ -125,6 +125,42 @@ class PCConfiguration(BaseModel):
     compatibility_issues: List[str] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Service Client Models
+class SupportTicket(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    subject: str
+    message: str
+    status: str = "open"  # "open", "in_progress", "resolved", "closed"
+    priority: str = "medium"  # "low", "medium", "high", "urgent"
+    category: str = "general"  # "general", "order", "technical", "billing"
+    admin_response: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class SupportTicketCreate(BaseModel):
+    subject: str
+    message: str
+    priority: str = "medium"
+    category: str = "general"
+
+class SupportTicketResponse(BaseModel):
+    admin_response: str
+
+# Product Review Models  
+class ProductReview(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    product_id: str
+    rating: int = Field(..., ge=1, le=5)  # 1-5 stars
+    comment: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class ProductReviewCreate(BaseModel):
+    product_id: str
+    rating: int = Field(..., ge=1, le=5)
+    comment: Optional[str] = None
+
 # Authentication functions
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
