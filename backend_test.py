@@ -321,17 +321,47 @@ def test_apply_promo_code():
     
     try:
         headers = {"Authorization": f"Bearer {user_token}"}
-        # Try to apply the existing GAMING10 promo code
-        response = requests.post(f"{BASE_URL}/cart/apply-promo?code=GAMING10", headers=headers)
+        
+        # First, ensure we have an active promo code to test with
+        if admin_token:
+            admin_headers = {"Authorization": f"Bearer {admin_token}"}
+            # Create a test promo code for application
+            create_response = requests.post(f"{BASE_URL}/admin/promo-codes?code=APPLY_TEST&discount_percentage=10", headers=admin_headers)
+            if create_response.status_code == 200:
+                test_code = "APPLY_TEST"
+            else:
+                # Fallback to GAMING10 if it exists and is active
+                test_code = "GAMING10"
+        else:
+            test_code = "GAMING10"
+        
+        # Try to apply the promo code
+        response = requests.post(f"{BASE_URL}/cart/apply-promo?code={test_code}", headers=headers)
         
         if response.status_code == 200:
             data = response.json()
             if "message" in data and "discount" in data:
-                log_test("Apply Promo Code", True, f"Promo code applied, discount: ${data['discount']}")
+                log_test("Apply Promo Code", True, f"Promo code '{test_code}' applied, discount: ${data['discount']}")
                 return True
             else:
                 log_test("Apply Promo Code", False, "Invalid response format", str(data))
                 return False
+        elif response.status_code == 404:
+            # If the promo code doesn't exist or is inactive, try to create and activate one
+            if admin_token:
+                admin_headers = {"Authorization": f"Bearer {admin_token}"}
+                # Create a new active promo code
+                create_response = requests.post(f"{BASE_URL}/admin/promo-codes?code=TESTACTIVE&discount_percentage=5", headers=admin_headers)
+                if create_response.status_code == 200:
+                    # Try applying the new code
+                    retry_response = requests.post(f"{BASE_URL}/cart/apply-promo?code=TESTACTIVE", headers=headers)
+                    if retry_response.status_code == 200:
+                        data = retry_response.json()
+                        log_test("Apply Promo Code", True, f"Promo code 'TESTACTIVE' applied, discount: ${data.get('discount', 0)}")
+                        return True
+            
+            log_test("Apply Promo Code", False, f"No active promo codes available for testing")
+            return False
         else:
             log_test("Apply Promo Code", False, f"HTTP {response.status_code}", response.text)
             return False
