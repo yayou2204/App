@@ -2630,9 +2630,16 @@ const AdminPanel = () => {
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           product.stock_status === 'in_stock' 
                             ? 'bg-green-100 text-green-800' 
+                            : product.stock_status === 'coming_soon'
+                            ? 'bg-yellow-100 text-yellow-800'
                             : 'bg-red-100 text-red-800'
                         }`}>
-                          {product.stock_quantity} en stock
+                          {product.stock_status === 'in_stock' 
+                            ? `${product.stock_quantity} en stock`
+                            : product.stock_status === 'coming_soon'
+                            ? 'Bientôt disponible'
+                            : 'Rupture de stock'
+                          }
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
