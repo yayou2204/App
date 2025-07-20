@@ -1925,6 +1925,34 @@ const AdminPanel = () => {
     }
   };
 
+  const handleAdminResponse = async (ticketId) => {
+    try {
+      await axios.post(`${API}/admin/support/tickets/${ticketId}/respond`, {
+        admin_response: adminResponse
+      });
+      alert('Réponse envoyée avec succès !');
+      setSelectedTicket(null);
+      setAdminResponse('');
+      fetchSupportTickets();
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de la réponse:', error);
+      alert('Erreur lors de l\'envoi de la réponse');
+    }
+  };
+
+  const updateTicketStatus = async (ticketId, status) => {
+    try {
+      await axios.put(`${API}/admin/support/tickets/${ticketId}/status`, {
+        status: status
+      });
+      alert('Statut mis à jour avec succès !');
+      fetchSupportTickets();
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut:', error);
+      alert('Erreur lors de la mise à jour du statut');
+    }
+  };
+
   // Get unique brands from products
   const getAvailableBrands = () => {
     const brands = new Set();
