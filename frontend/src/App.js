@@ -629,7 +629,24 @@ const Products = () => {
   const addToCart = async (productId) => {
     try {
       await axios.post(`${API}/cart/add?product_id=${productId}&quantity=1`);
-      alert('Produit ajouté au panier !');
+      
+      // Déclencher l'animation et mettre à jour le compteur
+      triggerCartAnimation();
+      await updateCartCount();
+      
+      // Animation de succès plus subtile
+      const button = event.target;
+      const originalText = button.textContent;
+      button.textContent = '✅ Ajouté !';
+      button.classList.add('bg-green-600');
+      button.classList.remove('bg-blue-600');
+      
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('bg-green-600');
+        button.classList.add('bg-blue-600');
+      }, 1500);
+      
     } catch (error) {
       alert('Erreur lors de l\'ajout au panier');
     }
