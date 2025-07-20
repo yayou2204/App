@@ -657,7 +657,9 @@ const Products = () => {
   const loadDynamicFilters = async () => {
     try {
       const response = await axios.get(`${API}/product-filters`);
+      console.log('Filtres récupérés:', response.data);
       setDynamicFilters(response.data.filter(filter => filter.active)); // Seulement les filtres actifs
+      console.log('Filtres actifs:', response.data.filter(filter => filter.active));
     } catch (error) {
       console.error('Erreur lors du chargement des filtres:', error);
     }
