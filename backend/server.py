@@ -389,6 +389,85 @@ async def apply_promo_code(code: str, user: User = Depends(get_current_user)):
     
     return {"message": "Promo code applied", "discount": cart_obj.discount}
 
+@api_router.delete("/cart/remove/{product_id}")
+async def remove_from_cart(product_id: str, user: User = Depends(get_current_user)):
+    cart = await db.carts.find_one({"user_id": user.id})
+    if not cart:
+        raise HTTPException(status_code=404, detail="Cart not found")
+    
+    cart_obj = Cart(**cart)
+    
+    # Find and remove the item
+    cart_obj.items = [item for item in cart_obj.items if item.product_id != product_id]
+    
+    # Recalculate total
+    cart_obj.total = sum(item.quantity * item.price for item in cart_obj.items)
+    
+    # Recalculate discount if promo code is applied
+    if cart_obj.promo_code:
+        promo = await db.promo_codes.find_one({"code": cart_obj.promo_code, "active": True})
+        if promo:
+            cart_obj.discount = cart_obj.total * (promo["discount_percentage"] / 100)
+        else:
+            cart_obj.discount = 0
+            cart_obj.promo_code = None
+    
+    await db.carts.update_one(
+        {"user_id": user.id},
+        {"$set": cart_obj.dict()}
+    )
+    
+    return {"message": "Item removed from cart"}
+
+@api_router.put("/cart/update/{product_id}")
+async def update_cart_quantity(product_id: str, quantity: int, user: User = Depends(get_current_user)):
+    if quantity <= 0:
+        raise HTTPException(status_code=400, detail="Quantity must be greater than 0")
+    
+    # Check product availability
+    product = await db.products.find_one({"id": product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    if product["stock_quantity"] < quantity:
+        raise HTTPException(status_code=400, detail="Insufficient stock")
+    
+    cart = await db.carts.find_one({"user_id": user.id})
+    if not cart:
+        raise HTTPException(status_code=404, detail="Cart not found")
+    
+    cart_obj = Cart(**cart)
+    
+    # Find and update the item
+    item_found = False
+    for item in cart_obj.items:
+        if item.product_id == product_id:
+            item.quantity = quantity
+            item_found = True
+            break
+    
+    if not item_found:
+        raise HTTPException(status_code=404, detail="Item not found in cart")
+    
+    # Recalculate total
+    cart_obj.total = sum(item.quantity * item.price for item in cart_obj.items)
+    
+    # Recalculate discount if promo code is applied
+    if cart_obj.promo_code:
+        promo = await db.promo_codes.find_one({"code": cart_obj.promo_code, "active": True})
+        if promo:
+            cart_obj.discount = cart_obj.total * (promo["discount_percentage"] / 100)
+        else:
+            cart_obj.discount = 0
+            cart_obj.promo_code = None
+    
+    await db.carts.update_one(
+        {"user_id": user.id},
+        {"$set": cart_obj.dict()}
+    )
+    
+    return {"message": "Cart quantity updated"}
+
 @api_router.post("/admin/promo-codes")
 async def create_promo_code(code: str, discount_percentage: float, admin: User = Depends(get_admin_user)):
     promo = PromoCode(code=code, discount_percentage=discount_percentage)
