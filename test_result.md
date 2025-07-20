@@ -144,7 +144,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -152,6 +152,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: Shopping cart system working perfectly. Add to cart, get cart, and promo code application all functional. Cart persists per user with proper authentication."
+      - working: "NA"
+        agent: "main"
+        comment: "ENHANCED: Added missing cart endpoints - DELETE /api/cart/remove/{product_id} for removing items and PUT /api/cart/update/{product_id} for updating quantities. Fixed frontend removeFromCart() and updateQuantity() functions to use these new endpoints with proper error handling."
         
   - task: "PC Configurator with Compatibility"
     implemented: true
