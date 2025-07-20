@@ -56,7 +56,8 @@ const Header = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      window.location.href = `/products?search=${encodeURIComponent(searchQuery)}`;
+      // Rediriger vers la page produits avec le paramètre de recherche
+      window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`;
     }
   };
 
