@@ -339,6 +339,20 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "NOUVELLE FONCTIONNALITÉ: Intégré l'affichage des notes d'avis sur la page des produits (liste). Ajout de l'état productsReviewStats, modification de fetchProducts pour récupérer les statistiques d'avis via /api/reviews/{product_id}/stats, ajout de la fonction renderStars, et modification de l'affichage des cartes produits pour inclure les étoiles et le nombre d'avis sous la marque du produit."
+  - task: "Precise Product Search Enhancement"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "AMÉLIORATION RECHERCHE: Modifié la fonction de recherche pour qu'elle soit plus précise - maintenant la recherche ne fonctionne QUE sur les noms/titres des produits (plus dans la marque ou description). Changé de filter_criteria['$or'] vers filter_criteria['name'] avec regex uniquement sur le nom."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Nouvelle recherche précise complètement testée avec 59/59 tests backend réussis (100%). 8 tests spécialisés ajoutés et validés. Recherche par 'AMD', 'Ryzen', 'RTX', 'STRIX' fonctionne parfaitement - ne retourne que les produits avec le terme dans le NOM uniquement. Exclusion des résultats avec terme dans marque/description confirmée. Recherche case-insensitive opérationnelle."
       - working: true
         agent: "testing"
         comment: "✅ PRODUCT REVIEWS SYSTEM FULLY TESTED: All 10 review-related tests passed (100% success rate). COMPREHENSIVE TESTING COMPLETED: POST /api/reviews (create review), GET /api/reviews/{product_id} (get reviews), GET /api/reviews/{product_id}/stats (CRITICAL - statistics for products page), DELETE /api/reviews/{review_id} (delete review). CRITICAL STATS ENDPOINT VERIFIED: Returns correct format with average_rating, total_reviews, and rating_distribution. Tested scenarios: products with no reviews (returns 0 values), products with multiple reviews (calculates correct averages), multiple products stats retrieval (simulating products page load). AUTHENTICATION & VALIDATION TESTED: Review creation requires authentication, invalid ratings (0, 6) correctly rejected, non-existent products handled properly. AVERAGE CALCULATION VERIFIED: Multiple reviews with different ratings (3, 4, 5 stars) correctly calculate average (4.2★). Backend reviews system fully operational and ready for frontend integration."
