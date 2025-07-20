@@ -818,6 +818,100 @@ const Products = () => {
         </div>
       </div>
 
+      {/* Dynamic Filters */}
+      {dynamicFilters.map(filter => (
+        <div key={filter.id} className="mb-6">
+          <h3 className="text-lg font-semibold mb-3">{filter.name}</h3>
+          {filter.type === 'select' && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedDynamicFilters({
+                  ...selectedDynamicFilters,
+                  [filter.id]: ''
+                })}
+                className={`px-4 py-2 rounded ${!selectedDynamicFilters[filter.id] ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                Tous
+              </button>
+              {filter.values.map(value => (
+                <button
+                  key={value}
+                  onClick={() => setSelectedDynamicFilters({
+                    ...selectedDynamicFilters,
+                    [filter.id]: value
+                  })}
+                  className={`px-4 py-2 rounded ${selectedDynamicFilters[filter.id] === value ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+          )}
+          {filter.type === 'range' && (
+            <div className="flex items-center space-x-4">
+              <input
+                type="number"
+                placeholder="Min"
+                className="w-24 px-3 py-2 border rounded"
+                onChange={(e) => {
+                  const currentValue = selectedDynamicFilters[filter.id] || '';
+                  const [, max] = currentValue.split(':');
+                  setSelectedDynamicFilters({
+                    ...selectedDynamicFilters,
+                    [filter.id]: `${e.target.value}:${max || ''}`
+                  });
+                }}
+              />
+              <span>à</span>
+              <input
+                type="number"
+                placeholder="Max"
+                className="w-24 px-3 py-2 border rounded"
+                onChange={(e) => {
+                  const currentValue = selectedDynamicFilters[filter.id] || '';
+                  const [min] = currentValue.split(':');
+                  setSelectedDynamicFilters({
+                    ...selectedDynamicFilters,
+                    [filter.id]: `${min || ''}:${e.target.value}`
+                  });
+                }}
+              />
+            </div>
+          )}
+          {filter.type === 'boolean' && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedDynamicFilters({
+                  ...selectedDynamicFilters,
+                  [filter.id]: ''
+                })}
+                className={`px-4 py-2 rounded ${!selectedDynamicFilters[filter.id] ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                Tous
+              </button>
+              <button
+                onClick={() => setSelectedDynamicFilters({
+                  ...selectedDynamicFilters,
+                  [filter.id]: 'true'
+                })}
+                className={`px-4 py-2 rounded ${selectedDynamicFilters[filter.id] === 'true' ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                Oui
+              </button>
+              <button
+                onClick={() => setSelectedDynamicFilters({
+                  ...selectedDynamicFilters,
+                  [filter.id]: 'false'
+                })}
+                className={`px-4 py-2 rounded ${selectedDynamicFilters[filter.id] === 'false' ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+              >
+                Non
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
+
       {/* Active Filters Summary */}
       {(category || selectedBrand || selectedSeries || priceRange) && (
         <div className="mb-6 p-4 bg-blue-50 rounded-lg">
