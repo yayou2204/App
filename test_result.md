@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "NOUVELLE DEMANDE: ajoute au fiche produits depuis la page produits les note d'avis et dans la page enlevé marque partenaire. dans la page d'accueil surprime nous travaillons avec et remplace le par nous fournissons."
+user_problem_statement: "maintenant synchronise le nombre d'Etoile jaune au nombre d'Etoile que le client met et ajoute au panel de modification de produit l'option bientôt disponible."
 
 backend:
   - task: "User Authentication System"
