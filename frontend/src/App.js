@@ -761,14 +761,14 @@ const Products = () => {
         // Étoile complète
         return (
           <span key={i} className="text-yellow-400" style={{ fontSize: '14px' }}>
-            ⭐
+            ★
           </span>
         );
       } else if (fillPercentage > 0) {
         // Étoile partielle
         return (
           <span key={i} style={{ position: 'relative', display: 'inline-block', fontSize: '14px' }}>
-            <span className="text-gray-300">⭐</span>
+            <span className="text-gray-400">☆</span>
             <span 
               className="text-yellow-400" 
               style={{ 
@@ -779,15 +779,15 @@ const Products = () => {
                 width: `${fillPercentage * 100}%`
               }}
             >
-              ⭐
+              ★
             </span>
           </span>
         );
       } else {
         // Étoile vide
         return (
-          <span key={i} className="text-gray-300" style={{ fontSize: '14px' }}>
-            ⭐
+          <span key={i} className="text-gray-400" style={{ fontSize: '14px' }}>
+            ☆
           </span>
         );
       }
