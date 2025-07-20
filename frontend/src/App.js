@@ -1877,6 +1877,9 @@ const AdminPanel = () => {
       if (activeTab === 'filters') {
         fetchProductFilters();
       }
+      if (activeTab === 'support') {
+        fetchSupportTickets();
+      }
     }
   }, [user, activeTab]);
 
