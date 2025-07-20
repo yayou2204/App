@@ -1263,7 +1263,7 @@ const ProductDetail = ({ productId }) => {
       });
       alert('Avis ajouté avec succès !');
       setShowReviewForm(false);
-      setReviewForm({ rating: 5, comment: '' });
+      setReviewForm({ rating: 0, comment: '' });
       fetchReviews();
       fetchReviewStats();
     } catch (error) {
