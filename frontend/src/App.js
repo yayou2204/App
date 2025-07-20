@@ -1575,6 +1575,16 @@ const AdminPanel = () => {
     }
   };
 
+  const fetchProductFilters = async () => {
+    try {
+      const response = await axios.get(`${API}/admin/product-filters`);
+      setProductFilters(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des filtres:', error);
+      setProductFilters([]);
+    }
+  };
+
   // Get unique brands from products
   const getAvailableBrands = () => {
     const brands = new Set();
