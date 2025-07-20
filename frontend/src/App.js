@@ -2311,6 +2311,214 @@ const AdminPanel = () => {
           </div>
         </div>
       )}
+
+      {activeTab === 'filters' && (
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">Filtres de Produits</h2>
+            <button
+              onClick={() => setShowAddFilter(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Créer un filtre
+            </button>
+          </div>
+
+          {showAddFilter && (
+            <div className="bg-white p-6 rounded-lg shadow mb-6">
+              <h3 className="text-lg font-semibold mb-4">
+                {editingFilter ? 'Modifier le filtre' : 'Créer un nouveau filtre'}
+              </h3>
+              
+              <form onSubmit={handleFilterSubmit} className="space-y-4">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Nom du filtre</label>
+                    <input
+                      type="text"
+                      placeholder="ex: Couleur, Taille, Prix"
+                      value={filterForm.name}
+                      onChange={(e) => setFilterForm({ ...filterForm, name: e.target.value })}
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Type de filtre</label>
+                    <select
+                      value={filterForm.type}
+                      onChange={(e) => setFilterForm({ ...filterForm, type: e.target.value })}
+                      className="w-full p-2 border rounded"
+                      required
+                    >
+                      <option value="select">Sélection (liste déroulante)</option>
+                      <option value="range">Plage de valeurs (prix)</option>
+                      <option value="boolean">Oui/Non</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Champ produit</label>
+                    <input
+                      type="text"
+                      placeholder="ex: brand, price, specifications.color"
+                      value={filterForm.field}
+                      onChange={(e) => setFilterForm({ ...filterForm, field: e.target.value })}
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                    <small className="text-gray-500">Champ de la base de données à filtrer</small>
+                  </div>
+                </div>
+
+                {filterForm.type === 'select' && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Valeurs possibles</label>
+                    <div className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        placeholder="Ajouter une valeur"
+                        value={newFilterValue}
+                        onChange={(e) => setNewFilterValue(e.target.value)}
+                        className="flex-1 p-2 border rounded"
+                      />
+                      <button
+                        type="button"
+                        onClick={addFilterValue}
+                        className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                      >
+                        Ajouter
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {filterForm.values.map((value, index) => (
+                        <span
+                          key={index}
+                          className="bg-gray-100 px-2 py-1 rounded flex items-center gap-1"
+                        >
+                          {value}
+                          <button
+                            type="button"
+                            onClick={() => removeFilterValue(value)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                  >
+                    {editingFilter ? 'Modifier' : 'Créer'} le filtre
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetFilterForm}
+                    className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-4 border-b">
+              <h3 className="text-lg font-semibold">Filtres existants</h3>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Nom</th>
+                    <th className="px-4 py-3 text-left">Type</th>
+                    <th className="px-4 py-3 text-left">Champ</th>
+                    <th className="px-4 py-3 text-left">Valeurs</th>
+                    <th className="px-4 py-3 text-left">Statut</th>
+                    <th className="px-4 py-3 text-left">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productFilters.map((filter) => (
+                    <tr key={filter.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">{filter.name}</td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
+                          {filter.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">{filter.field}</td>
+                      <td className="px-4 py-3 text-sm">
+                        {filter.type === 'select' ? (
+                          <div className="flex flex-wrap gap-1">
+                            {filter.values.slice(0, 3).map((value, index) => (
+                              <span key={index} className="bg-gray-100 px-1 py-0.5 rounded text-xs">
+                                {value}
+                              </span>
+                            ))}
+                            {filter.values.length > 3 && (
+                              <span className="text-xs text-gray-500">+{filter.values.length - 3}</span>
+                            )}
+                          </div>
+                        ) : filter.type === 'range' ? (
+                          <span className="text-sm text-gray-500">Plage numérique</span>
+                        ) : (
+                          <span className="text-sm text-gray-500">Oui/Non</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded text-sm ${
+                          filter.active 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {filter.active ? 'Actif' : 'Inactif'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => editFilter(filter)}
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            onClick={() => toggleFilterStatus(filter.id, filter.active)}
+                            className="text-orange-600 hover:text-orange-800 text-sm"
+                          >
+                            {filter.active ? 'Désactiver' : 'Activer'}
+                          </button>
+                          <button
+                            onClick={() => deleteFilter(filter.id)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {productFilters.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  Aucun filtre créé pour le moment
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
