@@ -137,6 +137,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ ENHANCED SEARCH TESTED: Enhanced search functionality verified. GET /api/products with search parameter, category parameter, and combined search+category parameters all working correctly. Search matches name, brand, and description fields with case-insensitive regex."
+      - working: true
+        agent: "testing"
+        comment: "✅ NEW PRECISE SEARCH FUNCTIONALITY FULLY TESTED: Comprehensive testing of the new precise search implementation completed with 8/8 specialized tests passed (100% success rate). CRITICAL VERIFICATION: Search now works ONLY on product names/titles as requested - no longer searches in brand or description fields. SPECIFIC TESTS PASSED: 1) 'AMD' search returns only products with 'AMD' in name (excluded brand-only matches), 2) 'Ryzen' search finds products with 'Ryzen' in name only, 3) 'RTX' search finds products with 'RTX' in name only, 4) 'STRIX' search finds products with 'STRIX' in name only, 5) Case-insensitive search working correctly, 6) EXCLUSION TEST PASSED: Products with 'NVIDIA' only in brand are correctly excluded from 'NVIDIA' search results, 7) Empty search results handled properly, 8) Combined search+category filtering works correctly. NEW SEARCH BEHAVIOR CONFIRMED: Search parameter now uses filter_criteria['name'] = {'$regex': search, '$options': 'i'} which searches ONLY in product names, not in brand or description fields as before. All other product management endpoints continue to function normally."
         
   - task: "Shopping Cart System"
     implemented: true
