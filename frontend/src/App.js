@@ -2865,6 +2865,145 @@ const AdminPanel = () => {
           </div>
         </div>
       )}
+
+      {activeTab === 'support' && (
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">Tickets de Support</h2>
+          </div>
+
+          <div className="grid gap-4">
+            {supportTickets.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                Aucun ticket de support
+              </div>
+            ) : (
+              supportTickets.map((ticket) => (
+                <div key={ticket.id} className="bg-white border rounded-lg p-6 shadow-sm">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">{ticket.subject}</h3>
+                      <p className="text-sm text-gray-600">
+                        Par: {ticket.user_id} • {new Date(ticket.created_at).toLocaleDateString('fr-FR')}
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          ticket.status === 'open' ? 'bg-blue-100 text-blue-800' :
+                          ticket.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' :
+                          ticket.status === 'resolved' ? 'bg-green-100 text-green-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {ticket.status === 'open' ? 'Ouvert' :
+                           ticket.status === 'in_progress' ? 'En cours' :
+                           ticket.status === 'resolved' ? 'Résolu' : 'Fermé'}
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                          ticket.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                          ticket.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {ticket.priority === 'urgent' ? 'Urgent' :
+                           ticket.priority === 'high' ? 'Élevée' :
+                           ticket.priority === 'medium' ? 'Moyenne' : 'Faible'}
+                        </span>
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          {ticket.category === 'general' ? 'Général' :
+                           ticket.category === 'order' ? 'Commande' :
+                           ticket.category === 'technical' ? 'Technique' : 'Facturation'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <h4 className="font-medium mb-2">Message du client:</h4>
+                    <p className="text-gray-700 bg-gray-50 p-3 rounded">{ticket.message}</p>
+                  </div>
+
+                  {ticket.admin_response && (
+                    <div className="mb-4">
+                      <h4 className="font-medium mb-2">Réponse admin:</h4>
+                      <p className="text-gray-700 bg-blue-50 p-3 rounded border-l-4 border-blue-400">
+                        {ticket.admin_response}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedTicket === ticket.id ? (
+                    <div className="mt-4 p-4 bg-gray-50 rounded">
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-1">Réponse</label>
+                        <textarea
+                          value={adminResponse}
+                          onChange={(e) => setAdminResponse(e.target.value)}
+                          className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                          rows="3"
+                          placeholder="Votre réponse au client..."
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleAdminResponse(ticket.id)}
+                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                        >
+                          Envoyer réponse
+                        </button>
+                        <button
+                          onClick={() => updateTicketStatus(ticket.id, 'resolved')}
+                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        >
+                          Marquer comme résolu
+                        </button>
+                        <button
+                          onClick={() => updateTicketStatus(ticket.id, 'closed')}
+                          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                        >
+                          Fermer
+                        </button>
+                        <button
+                          onClick={() => setSelectedTicket(null)}
+                          className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4 flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedTicket(ticket.id);
+                          setAdminResponse(ticket.admin_response || '');
+                        }}
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                      >
+                        {ticket.admin_response ? 'Modifier réponse' : 'Répondre'}
+                      </button>
+                      {ticket.status !== 'resolved' && (
+                        <button
+                          onClick={() => updateTicketStatus(ticket.id, 'resolved')}
+                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                        >
+                          Marquer résolu
+                        </button>
+                      )}
+                      {ticket.status !== 'closed' && (
+                        <button
+                          onClick={() => updateTicketStatus(ticket.id, 'closed')}
+                          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                        >
+                          Fermer ticket
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
