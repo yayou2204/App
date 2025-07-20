@@ -2489,6 +2489,18 @@ def run_all_tests():
     test_search_and_category_combined()
     test_create_product()
     
+    # NEW: Precise Search Tests (Focus of this testing session)
+    print("🔍 NEW PRECISE SEARCH TESTS")
+    print("-" * 40)
+    test_precise_search_name_only()
+    test_precise_search_ryzen()
+    test_precise_search_rtx()
+    test_precise_search_strix()
+    test_precise_search_case_insensitive()
+    test_precise_search_exclusion()
+    test_precise_search_empty_results()
+    test_precise_search_with_category()
+    
     # Shopping Cart Tests
     print("🛒 ENHANCED SHOPPING CART TESTS")
     print("-" * 40)
