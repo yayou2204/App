@@ -720,6 +720,161 @@ async def get_my_configurations(user: User = Depends(get_current_user)):
     configs = await db.pc_configurations.find({"user_id": user.id}).to_list(1000)
     return [PCConfiguration(**config) for config in configs]
 
+# === SERVICE CLIENT ENDPOINTS ===
+@api_router.post("/support/tickets")
+async def create_support_ticket(ticket_data: SupportTicketCreate, user: User = Depends(get_current_user)):
+    ticket = SupportTicket(
+        user_id=user.id,
+        subject=ticket_data.subject,
+        message=ticket_data.message,
+        priority=ticket_data.priority,
+        category=ticket_data.category
+    )
+    
+    await db.support_tickets.insert_one(ticket.dict())
+    return {"message": "Ticket créé avec succès", "ticket_id": ticket.id}
+
+@api_router.get("/support/tickets")
+async def get_my_tickets(user: User = Depends(get_current_user)):
+    tickets = await db.support_tickets.find({"user_id": user.id}).sort("created_at", -1).to_list(100)
+    return [SupportTicket(**ticket) for ticket in tickets]
+
+@api_router.get("/support/tickets/{ticket_id}")
+async def get_ticket_details(ticket_id: str, user: User = Depends(get_current_user)):
+    ticket = await db.support_tickets.find_one({"id": ticket_id, "user_id": user.id})
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket non trouvé")
+    return SupportTicket(**ticket)
+
+# Admin endpoints for support tickets
+@api_router.get("/admin/support/tickets")
+async def get_all_tickets(admin_password: str):
+    if admin_password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Mot de passe admin incorrect")
+    
+    tickets = await db.support_tickets.find({}).sort("created_at", -1).to_list(1000)
+    return [SupportTicket(**ticket) for ticket in tickets]
+
+@api_router.put("/admin/support/tickets/{ticket_id}/respond")
+async def respond_to_ticket(ticket_id: str, response_data: SupportTicketResponse, admin_password: str):
+    if admin_password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Mot de passe admin incorrect")
+    
+    ticket = await db.support_tickets.find_one({"id": ticket_id})
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket non trouvé")
+    
+    await db.support_tickets.update_one(
+        {"id": ticket_id},
+        {
+            "$set": {
+                "admin_response": response_data.admin_response,
+                "status": "resolved",
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+    
+    return {"message": "Réponse ajoutée avec succès"}
+
+@api_router.put("/admin/support/tickets/{ticket_id}/status")
+async def update_ticket_status(ticket_id: str, status: str, admin_password: str):
+    if admin_password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Mot de passe admin incorrect")
+    
+    valid_statuses = ["open", "in_progress", "resolved", "closed"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Statut invalide")
+    
+    result = await db.support_tickets.update_one(
+        {"id": ticket_id},
+        {
+            "$set": {
+                "status": status,
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Ticket non trouvé")
+    
+    return {"message": "Statut mis à jour"}
+
+# === PRODUCT REVIEWS ENDPOINTS ===
+@api_router.post("/reviews")
+async def create_review(review_data: ProductReviewCreate, user: User = Depends(get_current_user)):
+    # Check if product exists
+    product = await db.products.find_one({"id": review_data.product_id})
+    if not product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    
+    # Check if user already reviewed this product
+    existing_review = await db.product_reviews.find_one({
+        "user_id": user.id,
+        "product_id": review_data.product_id
+    })
+    
+    if existing_review:
+        raise HTTPException(status_code=400, detail="Vous avez déjà noté ce produit")
+    
+    review = ProductReview(
+        user_id=user.id,
+        product_id=review_data.product_id,
+        rating=review_data.rating,
+        comment=review_data.comment
+    )
+    
+    await db.product_reviews.insert_one(review.dict())
+    return {"message": "Avis ajouté avec succès"}
+
+@api_router.get("/reviews/{product_id}")
+async def get_product_reviews(product_id: str):
+    reviews = await db.product_reviews.find({"product_id": product_id}).sort("created_at", -1).to_list(100)
+    
+    # Get user information for each review
+    enriched_reviews = []
+    for review in reviews:
+        user = await db.users.find_one({"id": review["user_id"]})
+        review_data = ProductReview(**review).dict()
+        review_data["username"] = user["username"] if user else "Utilisateur supprimé"
+        enriched_reviews.append(review_data)
+    
+    return enriched_reviews
+
+@api_router.get("/reviews/{product_id}/stats")
+async def get_product_review_stats(product_id: str):
+    reviews = await db.product_reviews.find({"product_id": product_id}).to_list(1000)
+    
+    if not reviews:
+        return {
+            "average_rating": 0,
+            "total_reviews": 0,
+            "rating_distribution": {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+        }
+    
+    total_rating = sum(review["rating"] for review in reviews)
+    average_rating = round(total_rating / len(reviews), 1)
+    
+    rating_distribution = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for review in reviews:
+        rating_distribution[review["rating"]] += 1
+    
+    return {
+        "average_rating": average_rating,
+        "total_reviews": len(reviews),
+        "rating_distribution": rating_distribution
+    }
+
+@api_router.delete("/reviews/{review_id}")
+async def delete_review(review_id: str, user: User = Depends(get_current_user)):
+    result = await db.product_reviews.delete_one({"id": review_id, "user_id": user.id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Avis non trouvé")
+    
+    return {"message": "Avis supprimé"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
