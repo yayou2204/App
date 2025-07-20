@@ -171,7 +171,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -179,6 +179,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: Promo code system working correctly. Admin can create promo codes, users can apply them to cart. Sample 'GAMING10' promo code (10% discount) working. Discount calculations accurate."
+      - working: "NA"
+        agent: "main"
+        comment: "ENHANCED: Added full CRUD endpoints for promo codes management - GET all codes, PUT update code, DELETE code, PUT toggle status. Added complete admin interface for promo code management with create/edit/delete/toggle functionality."
 
 frontend:
   - task: "Homepage with Carousel"
