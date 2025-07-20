@@ -1467,6 +1467,33 @@ const AdminPanel = () => {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const formData = {
+        ...productForm,
+        price: parseFloat(productForm.price),
+        stock_quantity: parseInt(productForm.stock_quantity),
+        specifications: productForm.specifications ? JSON.parse(productForm.specifications) : {}
+      };
+
+      if (editingProduct) {
+        await axios.put(`${API}/admin/products/${editingProduct.id}`, formData);
+        alert('Produit modifié avec succès !');
+      } else {
+        await axios.post(`${API}/admin/products`, formData);
+        alert('Produit ajouté avec succès !');
+      }
+      
+      resetForm();
+      fetchProducts();
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Erreur lors de l\'opération');
+    }
+  };
+
   const resetForm = () => {
     setProductForm({
       name: '',
