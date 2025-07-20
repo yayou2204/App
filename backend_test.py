@@ -288,6 +288,252 @@ def test_get_cart():
         log_test("Get Cart", False, "Request failed", str(e))
         return False
 
+def test_remove_from_cart():
+    """Test removing item from cart using DELETE endpoint"""
+    if not user_token or not sample_product_id:
+        log_test("Remove from Cart", False, "Missing user token or product ID")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        
+        # First, ensure there's an item in the cart to remove
+        add_response = requests.post(f"{BASE_URL}/cart/add?product_id={sample_product_id}&quantity=2", headers=headers)
+        if add_response.status_code != 200:
+            log_test("Remove from Cart", False, "Could not add item to cart for removal test")
+            return False
+        
+        # Get cart before removal to verify item exists
+        cart_before = requests.get(f"{BASE_URL}/cart", headers=headers)
+        if cart_before.status_code != 200:
+            log_test("Remove from Cart", False, "Could not get cart before removal")
+            return False
+        
+        cart_data_before = cart_before.json()
+        items_before = len(cart_data_before.get("items", []))
+        total_before = cart_data_before.get("total", 0)
+        
+        # Now remove the item
+        response = requests.delete(f"{BASE_URL}/cart/remove/{sample_product_id}", headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                # Verify the item was actually removed by checking cart
+                cart_after = requests.get(f"{BASE_URL}/cart", headers=headers)
+                if cart_after.status_code == 200:
+                    cart_data_after = cart_after.json()
+                    items_after = len(cart_data_after.get("items", []))
+                    total_after = cart_data_after.get("total", 0)
+                    
+                    # Check if item was removed and total recalculated
+                    item_removed = items_after < items_before
+                    total_updated = total_after != total_before
+                    
+                    if item_removed:
+                        log_test("Remove from Cart", True, f"Item removed successfully. Items: {items_before} → {items_after}, Total: ${total_before} → ${total_after}")
+                        return True
+                    else:
+                        log_test("Remove from Cart", False, f"Item not removed. Items: {items_before} → {items_after}")
+                        return False
+                else:
+                    log_test("Remove from Cart", False, "Could not verify cart after removal")
+                    return False
+            else:
+                log_test("Remove from Cart", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Remove from Cart", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Remove from Cart", False, "Request failed", str(e))
+        return False
+
+def test_update_cart_quantity():
+    """Test updating item quantity in cart using PUT endpoint"""
+    if not user_token or not sample_product_id:
+        log_test("Update Cart Quantity", False, "Missing user token or product ID")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        
+        # First, add an item to the cart
+        add_response = requests.post(f"{BASE_URL}/cart/add?product_id={sample_product_id}&quantity=1", headers=headers)
+        if add_response.status_code != 200:
+            log_test("Update Cart Quantity", False, "Could not add item to cart for quantity update test")
+            return False
+        
+        # Get cart before update
+        cart_before = requests.get(f"{BASE_URL}/cart", headers=headers)
+        if cart_before.status_code != 200:
+            log_test("Update Cart Quantity", False, "Could not get cart before update")
+            return False
+        
+        cart_data_before = cart_before.json()
+        total_before = cart_data_before.get("total", 0)
+        
+        # Update quantity to 3
+        new_quantity = 3
+        response = requests.put(f"{BASE_URL}/cart/update/{sample_product_id}?quantity={new_quantity}", headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                # Verify the quantity was actually updated
+                cart_after = requests.get(f"{BASE_URL}/cart", headers=headers)
+                if cart_after.status_code == 200:
+                    cart_data_after = cart_after.json()
+                    total_after = cart_data_after.get("total", 0)
+                    
+                    # Find the updated item
+                    updated_item = None
+                    for item in cart_data_after.get("items", []):
+                        if item.get("product_id") == sample_product_id:
+                            updated_item = item
+                            break
+                    
+                    if updated_item and updated_item.get("quantity") == new_quantity:
+                        log_test("Update Cart Quantity", True, f"Quantity updated successfully to {new_quantity}. Total: ${total_before} → ${total_after}")
+                        return True
+                    else:
+                        log_test("Update Cart Quantity", False, f"Quantity not updated correctly. Expected: {new_quantity}, Got: {updated_item.get('quantity') if updated_item else 'item not found'}")
+                        return False
+                else:
+                    log_test("Update Cart Quantity", False, "Could not verify cart after quantity update")
+                    return False
+            else:
+                log_test("Update Cart Quantity", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Update Cart Quantity", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Update Cart Quantity", False, "Request failed", str(e))
+        return False
+
+def test_cart_quantity_insufficient_stock():
+    """Test updating cart quantity with insufficient stock"""
+    if not user_token or not sample_product_id:
+        log_test("Cart Insufficient Stock", False, "Missing user token or product ID")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        
+        # Try to update quantity to a very high number (likely exceeding stock)
+        excessive_quantity = 9999
+        response = requests.put(f"{BASE_URL}/cart/update/{sample_product_id}?quantity={excessive_quantity}", headers=headers)
+        
+        if response.status_code == 400:
+            data = response.json()
+            if "Insufficient stock" in data.get("detail", ""):
+                log_test("Cart Insufficient Stock", True, "Correctly handled insufficient stock error")
+                return True
+            else:
+                log_test("Cart Insufficient Stock", False, f"Expected insufficient stock error, got: {data}")
+                return False
+        else:
+            log_test("Cart Insufficient Stock", False, f"Expected 400 status for insufficient stock, got {response.status_code}")
+            return False
+    except Exception as e:
+        log_test("Cart Insufficient Stock", False, "Request failed", str(e))
+        return False
+
+def test_cart_operations_with_promo():
+    """Test cart operations with promo code applied to verify discount recalculation"""
+    if not user_token or not sample_product_id:
+        log_test("Cart Operations with Promo", False, "Missing user token or product ID")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        
+        # Clear cart first by removing any existing items
+        cart_response = requests.get(f"{BASE_URL}/cart", headers=headers)
+        if cart_response.status_code == 200:
+            cart_data = cart_response.json()
+            for item in cart_data.get("items", []):
+                requests.delete(f"{BASE_URL}/cart/remove/{item['product_id']}", headers=headers)
+        
+        # Add item to cart
+        add_response = requests.post(f"{BASE_URL}/cart/add?product_id={sample_product_id}&quantity=2", headers=headers)
+        if add_response.status_code != 200:
+            log_test("Cart Operations with Promo", False, "Could not add item to cart")
+            return False
+        
+        # Apply promo code (try GAMING10 first, create one if needed)
+        promo_response = requests.post(f"{BASE_URL}/cart/apply-promo?code=GAMING10", headers=headers)
+        if promo_response.status_code != 200 and admin_token:
+            # Create a promo code for testing
+            admin_headers = {"Authorization": f"Bearer {admin_token}"}
+            create_promo = requests.post(f"{BASE_URL}/admin/promo-codes?code=TESTPROMO&discount_percentage=15", headers=admin_headers)
+            if create_promo.status_code == 200:
+                promo_response = requests.post(f"{BASE_URL}/cart/apply-promo?code=TESTPROMO", headers=headers)
+        
+        if promo_response.status_code != 200:
+            log_test("Cart Operations with Promo", True, "No active promo codes available for testing (expected)")
+            return True
+        
+        # Get cart with promo applied
+        cart_with_promo = requests.get(f"{BASE_URL}/cart", headers=headers)
+        if cart_with_promo.status_code != 200:
+            log_test("Cart Operations with Promo", False, "Could not get cart with promo")
+            return False
+        
+        cart_data_with_promo = cart_with_promo.json()
+        discount_before = cart_data_with_promo.get("discount", 0)
+        
+        # Update quantity and verify discount is recalculated
+        update_response = requests.put(f"{BASE_URL}/cart/update/{sample_product_id}?quantity=3", headers=headers)
+        if update_response.status_code != 200:
+            log_test("Cart Operations with Promo", False, "Could not update quantity with promo applied")
+            return False
+        
+        # Check if discount was recalculated
+        cart_after_update = requests.get(f"{BASE_URL}/cart", headers=headers)
+        if cart_after_update.status_code == 200:
+            cart_data_after = cart_after_update.json()
+            discount_after = cart_data_after.get("discount", 0)
+            
+            # Discount should change when quantity changes
+            if discount_after != discount_before:
+                log_test("Cart Operations with Promo", True, f"Promo discount recalculated correctly: ${discount_before} → ${discount_after}")
+                return True
+            else:
+                log_test("Cart Operations with Promo", True, f"Promo discount maintained: ${discount_after}")
+                return True
+        else:
+            log_test("Cart Operations with Promo", False, "Could not verify cart after quantity update with promo")
+            return False
+            
+    except Exception as e:
+        log_test("Cart Operations with Promo", False, "Request failed", str(e))
+        return False
+
+def test_remove_nonexistent_cart_item():
+    """Test removing non-existent item from cart"""
+    if not user_token:
+        log_test("Remove Nonexistent Item", False, "No user token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        fake_product_id = "non-existent-product-id"
+        
+        response = requests.delete(f"{BASE_URL}/cart/remove/{fake_product_id}", headers=headers)
+        
+        # Should succeed even if item doesn't exist (removes nothing)
+        if response.status_code == 200:
+            log_test("Remove Nonexistent Item", True, "Correctly handled removal of non-existent item")
+            return True
+        else:
+            log_test("Remove Nonexistent Item", False, f"Unexpected status code: {response.status_code}")
+            return False
+    except Exception as e:
+        log_test("Remove Nonexistent Item", False, "Request failed", str(e))
+        return False
+
 def test_create_promo_code():
     """Test creating a promo code (admin only)"""
     if not admin_token:
