@@ -951,6 +951,481 @@ def test_get_my_configurations():
         log_test("Get My Configurations", False, "Request failed", str(e))
         return False
 
+# Global variables for product filter testing
+test_filter_ids = []
+
+def test_get_product_filters_admin():
+    """Test getting all product filters (admin only)"""
+    if not admin_token:
+        log_test("Get Product Filters (Admin)", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        response = requests.get(f"{BASE_URL}/admin/product-filters", headers=headers)
+        
+        if response.status_code == 200:
+            filters = response.json()
+            if isinstance(filters, list):
+                log_test("Get Product Filters (Admin)", True, f"Retrieved {len(filters)} product filters")
+                return True
+            else:
+                log_test("Get Product Filters (Admin)", False, "Invalid response format", str(filters))
+                return False
+        else:
+            log_test("Get Product Filters (Admin)", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Get Product Filters (Admin)", False, "Request failed", str(e))
+        return False
+
+def test_create_select_filter():
+    """Test creating a select type filter (brand filter)"""
+    if not admin_token:
+        log_test("Create Select Filter", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        filter_data = {
+            "name": "Marque",
+            "type": "select", 
+            "field": "brand",
+            "values": ["AMD", "Intel", "NVIDIA", "ASUS", "MSI"]
+        }
+        
+        response = requests.post(f"{BASE_URL}/admin/product-filters", 
+                               params=filter_data, headers=headers)
+        
+        if response.status_code == 200:
+            filter_obj = response.json()
+            if "id" in filter_obj and filter_obj["name"] == "Marque":
+                global test_filter_ids
+                test_filter_ids.append(filter_obj["id"])
+                log_test("Create Select Filter", True, f"Select filter created: {filter_obj['name']} with {len(filter_obj['values'])} values")
+                return True
+            else:
+                log_test("Create Select Filter", False, "Invalid filter response", str(filter_obj))
+                return False
+        else:
+            log_test("Create Select Filter", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Create Select Filter", False, "Request failed", str(e))
+        return False
+
+def test_create_range_filter():
+    """Test creating a range type filter (price filter)"""
+    if not admin_token:
+        log_test("Create Range Filter", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        filter_data = {
+            "name": "Prix",
+            "type": "range",
+            "field": "price",
+            "values": []  # Range filters don't need predefined values
+        }
+        
+        response = requests.post(f"{BASE_URL}/admin/product-filters", 
+                               params=filter_data, headers=headers)
+        
+        if response.status_code == 200:
+            filter_obj = response.json()
+            if "id" in filter_obj and filter_obj["name"] == "Prix":
+                global test_filter_ids
+                test_filter_ids.append(filter_obj["id"])
+                log_test("Create Range Filter", True, f"Range filter created: {filter_obj['name']} for field {filter_obj['field']}")
+                return True
+            else:
+                log_test("Create Range Filter", False, "Invalid filter response", str(filter_obj))
+                return False
+        else:
+            log_test("Create Range Filter", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Create Range Filter", False, "Request failed", str(e))
+        return False
+
+def test_create_boolean_filter():
+    """Test creating a boolean type filter (stock availability)"""
+    if not admin_token:
+        log_test("Create Boolean Filter", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        filter_data = {
+            "name": "En stock",
+            "type": "boolean",
+            "field": "stock_quantity",
+            "values": []  # Boolean filters don't need predefined values
+        }
+        
+        response = requests.post(f"{BASE_URL}/admin/product-filters", 
+                               params=filter_data, headers=headers)
+        
+        if response.status_code == 200:
+            filter_obj = response.json()
+            if "id" in filter_obj and filter_obj["name"] == "En stock":
+                global test_filter_ids
+                test_filter_ids.append(filter_obj["id"])
+                log_test("Create Boolean Filter", True, f"Boolean filter created: {filter_obj['name']} for field {filter_obj['field']}")
+                return True
+            else:
+                log_test("Create Boolean Filter", False, "Invalid filter response", str(filter_obj))
+                return False
+        else:
+            log_test("Create Boolean Filter", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Create Boolean Filter", False, "Request failed", str(e))
+        return False
+
+def test_create_specifications_filter():
+    """Test creating a filter for product specifications (color)"""
+    if not admin_token:
+        log_test("Create Specifications Filter", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        filter_data = {
+            "name": "Couleur",
+            "type": "select",
+            "field": "specifications.color",
+            "values": ["Rouge", "Bleu", "Noir", "Blanc", "RGB"]
+        }
+        
+        response = requests.post(f"{BASE_URL}/admin/product-filters", 
+                               params=filter_data, headers=headers)
+        
+        if response.status_code == 200:
+            filter_obj = response.json()
+            if "id" in filter_obj and filter_obj["name"] == "Couleur":
+                global test_filter_ids
+                test_filter_ids.append(filter_obj["id"])
+                log_test("Create Specifications Filter", True, f"Specifications filter created: {filter_obj['name']} for nested field {filter_obj['field']}")
+                return True
+            else:
+                log_test("Create Specifications Filter", False, "Invalid filter response", str(filter_obj))
+                return False
+        else:
+            log_test("Create Specifications Filter", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Create Specifications Filter", False, "Request failed", str(e))
+        return False
+
+def test_update_product_filter():
+    """Test updating a product filter"""
+    if not admin_token or not test_filter_ids:
+        log_test("Update Product Filter", False, "No admin token or test filters available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        filter_id = test_filter_ids[0]  # Use first created filter
+        
+        update_data = {
+            "name": "Marque Mise à Jour",
+            "type": "select",
+            "field": "brand", 
+            "values": ["AMD", "Intel", "NVIDIA", "ASUS", "MSI", "Corsair"]
+        }
+        
+        response = requests.put(f"{BASE_URL}/admin/product-filters/{filter_id}", 
+                              params=update_data, headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                log_test("Update Product Filter", True, "Product filter updated successfully")
+                return True
+            else:
+                log_test("Update Product Filter", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Update Product Filter", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Update Product Filter", False, "Request failed", str(e))
+        return False
+
+def test_toggle_product_filter():
+    """Test toggling product filter active status"""
+    if not admin_token or not test_filter_ids:
+        log_test("Toggle Product Filter", False, "No admin token or test filters available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        filter_id = test_filter_ids[0]  # Use first created filter
+        
+        # Toggle to inactive
+        response = requests.put(f"{BASE_URL}/admin/product-filters/{filter_id}/toggle?active=false", 
+                              headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "deactivated" in data.get("message", ""):
+                # Toggle back to active
+                response2 = requests.put(f"{BASE_URL}/admin/product-filters/{filter_id}/toggle?active=true", 
+                                       headers=headers)
+                if response2.status_code == 200:
+                    log_test("Toggle Product Filter", True, "Product filter toggled successfully (inactive → active)")
+                    return True
+                else:
+                    log_test("Toggle Product Filter", False, f"Failed to toggle back to active: {response2.status_code}")
+                    return False
+            else:
+                log_test("Toggle Product Filter", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Toggle Product Filter", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Toggle Product Filter", False, "Request failed", str(e))
+        return False
+
+def test_get_active_product_filters():
+    """Test getting active product filters (public endpoint)"""
+    try:
+        response = requests.get(f"{BASE_URL}/product-filters")
+        
+        if response.status_code == 200:
+            filters = response.json()
+            if isinstance(filters, list):
+                active_count = len(filters)
+                log_test("Get Active Product Filters", True, f"Retrieved {active_count} active product filters")
+                return True
+            else:
+                log_test("Get Active Product Filters", False, "Invalid response format", str(filters))
+                return False
+        else:
+            log_test("Get Active Product Filters", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Get Active Product Filters", False, "Request failed", str(e))
+        return False
+
+def test_product_filtering_by_brand():
+    """Test dynamic product filtering by brand"""
+    try:
+        # Test filtering by AMD brand using the dynamic filter system
+        response = requests.get(f"{BASE_URL}/products?filter_marque_mise_à_jour=AMD")
+        
+        if response.status_code == 200:
+            products = response.json()
+            if isinstance(products, list):
+                # Check if all returned products are AMD brand
+                amd_products = [p for p in products if p.get("brand") == "AMD"]
+                if len(products) == len(amd_products) or len(products) == 0:
+                    log_test("Product Filtering by Brand", True, f"Brand filtering returned {len(products)} AMD products")
+                    return True
+                else:
+                    log_test("Product Filtering by Brand", False, f"Brand filter returned non-AMD products: {len(products)} total, {len(amd_products)} AMD")
+                    return False
+            else:
+                log_test("Product Filtering by Brand", False, "Invalid response format", str(products))
+                return False
+        else:
+            log_test("Product Filtering by Brand", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Product Filtering by Brand", False, "Request failed", str(e))
+        return False
+
+def test_product_filtering_by_price_range():
+    """Test dynamic product filtering by price range"""
+    try:
+        # Test filtering by price range (100-500)
+        response = requests.get(f"{BASE_URL}/products?filter_prix=100:500")
+        
+        if response.status_code == 200:
+            products = response.json()
+            if isinstance(products, list):
+                # Check if all returned products are within price range
+                valid_products = [p for p in products if 100 <= p.get("price", 0) <= 500]
+                if len(products) == len(valid_products) or len(products) == 0:
+                    log_test("Product Filtering by Price Range", True, f"Price range filtering returned {len(products)} products in range 100-500")
+                    return True
+                else:
+                    log_test("Product Filtering by Price Range", False, f"Price filter returned products outside range: {len(products)} total, {len(valid_products)} valid")
+                    return False
+            else:
+                log_test("Product Filtering by Price Range", False, "Invalid response format", str(products))
+                return False
+        else:
+            log_test("Product Filtering by Price Range", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Product Filtering by Price Range", False, "Request failed", str(e))
+        return False
+
+def test_product_filtering_by_stock():
+    """Test dynamic product filtering by stock availability"""
+    try:
+        # Test filtering by stock availability (products with stock > 0)
+        response = requests.get(f"{BASE_URL}/products?filter_en_stock=true")
+        
+        if response.status_code == 200:
+            products = response.json()
+            if isinstance(products, list):
+                # Check if all returned products have stock > 0
+                in_stock_products = [p for p in products if p.get("stock_quantity", 0) > 0]
+                if len(products) == len(in_stock_products) or len(products) == 0:
+                    log_test("Product Filtering by Stock", True, f"Stock filtering returned {len(products)} products in stock")
+                    return True
+                else:
+                    log_test("Product Filtering by Stock", False, f"Stock filter returned out-of-stock products: {len(products)} total, {len(in_stock_products)} in stock")
+                    return False
+            else:
+                log_test("Product Filtering by Stock", False, "Invalid response format", str(products))
+                return False
+        else:
+            log_test("Product Filtering by Stock", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Product Filtering by Stock", False, "Request failed", str(e))
+        return False
+
+def test_combined_filtering():
+    """Test combining multiple filters (search + category + dynamic filters)"""
+    try:
+        # Test combining search, category, and brand filter
+        response = requests.get(f"{BASE_URL}/products?search=AMD&category=CPU&filter_marque_mise_à_jour=AMD")
+        
+        if response.status_code == 200:
+            products = response.json()
+            if isinstance(products, list):
+                # Verify all products match all criteria
+                valid_products = []
+                for product in products:
+                    matches_search = "AMD" in product.get("name", "") or "AMD" in product.get("brand", "") or "AMD" in product.get("description", "")
+                    matches_category = product.get("category") == "CPU"
+                    matches_brand = product.get("brand") == "AMD"
+                    
+                    if matches_search and matches_category and matches_brand:
+                        valid_products.append(product)
+                
+                if len(products) == len(valid_products) or len(products) == 0:
+                    log_test("Combined Filtering", True, f"Combined filtering returned {len(products)} products matching all criteria")
+                    return True
+                else:
+                    log_test("Combined Filtering", False, f"Combined filter returned invalid products: {len(products)} total, {len(valid_products)} valid")
+                    return False
+            else:
+                log_test("Combined Filtering", False, "Invalid response format", str(products))
+                return False
+        else:
+            log_test("Combined Filtering", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Combined Filtering", False, "Request failed", str(e))
+        return False
+
+def test_filter_authentication():
+    """Test that admin filter endpoints require authentication"""
+    try:
+        # Test creating filter without authentication
+        filter_data = {
+            "name": "Test Filter",
+            "type": "select",
+            "field": "brand",
+            "values": ["Test"]
+        }
+        
+        response = requests.post(f"{BASE_URL}/admin/product-filters", params=filter_data)
+        
+        if response.status_code == 401 or response.status_code == 403:
+            log_test("Filter Authentication", True, "Admin filter endpoints correctly require authentication")
+            return True
+        else:
+            log_test("Filter Authentication", False, f"Expected 401/403 for unauthenticated request, got {response.status_code}")
+            return False
+    except Exception as e:
+        log_test("Filter Authentication", False, "Request failed", str(e))
+        return False
+
+def test_delete_product_filter():
+    """Test deleting a product filter"""
+    if not admin_token or not test_filter_ids:
+        log_test("Delete Product Filter", False, "No admin token or test filters available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # Create a filter specifically for deletion
+        filter_data = {
+            "name": "Delete Test Filter",
+            "type": "select",
+            "field": "category",
+            "values": ["TEST"]
+        }
+        
+        create_response = requests.post(f"{BASE_URL}/admin/product-filters", 
+                                      params=filter_data, headers=headers)
+        
+        if create_response.status_code != 200:
+            log_test("Delete Product Filter", False, "Could not create test filter for deletion")
+            return False
+        
+        created_filter = create_response.json()
+        filter_id = created_filter["id"]
+        
+        # Now delete it
+        response = requests.delete(f"{BASE_URL}/admin/product-filters/{filter_id}", headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                log_test("Delete Product Filter", True, "Product filter deleted successfully")
+                return True
+            else:
+                log_test("Delete Product Filter", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Delete Product Filter", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Delete Product Filter", False, "Request failed", str(e))
+        return False
+
+def test_invalid_filter_operations():
+    """Test error handling for invalid filter operations"""
+    if not admin_token:
+        log_test("Invalid Filter Operations", False, "No admin token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {admin_token}"}
+        
+        # Test updating non-existent filter
+        fake_id = "non-existent-filter-id"
+        update_data = {
+            "name": "Fake Filter",
+            "type": "select",
+            "field": "fake_field",
+            "values": ["fake"]
+        }
+        
+        response = requests.put(f"{BASE_URL}/admin/product-filters/{fake_id}", 
+                              params=update_data, headers=headers)
+        
+        if response.status_code == 404:
+            log_test("Invalid Filter Operations", True, "Correctly handled non-existent filter update")
+            return True
+        else:
+            log_test("Invalid Filter Operations", False, f"Expected 404 for non-existent filter, got {response.status_code}")
+            return False
+    except Exception as e:
+        log_test("Invalid Filter Operations", False, "Request failed", str(e))
+        return False
+
 def run_all_tests():
     """Run all backend tests in sequence"""
     print("=" * 80)
