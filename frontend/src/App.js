@@ -539,6 +539,16 @@ const Products = () => {
     return Array.from(series).sort();
   };
 
+  // Read URL parameters on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSearch = urlParams.get('search');
+    const urlCategory = urlParams.get('category');
+    
+    if (urlSearch) setSearchQuery(urlSearch);
+    if (urlCategory) setCategory(urlCategory);
+  }, []);
+
   useEffect(() => {
     fetchProducts();
   }, [category, searchQuery]);
