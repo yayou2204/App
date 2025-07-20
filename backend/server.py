@@ -519,6 +519,78 @@ async def toggle_promo_code(promo_id: str, active: bool, admin: User = Depends(g
     
     return {"message": f"Promo code {'activated' if active else 'deactivated'} successfully"}
 
+# Product Filters Management Endpoints
+@api_router.get("/admin/product-filters")
+async def get_product_filters(admin: User = Depends(get_admin_user)):
+    filters = await db.product_filters.find({}).to_list(1000)
+    return [ProductFilter(**filter_data) for filter_data in filters]
+
+@api_router.post("/admin/product-filters")
+async def create_product_filter(
+    name: str, 
+    type: str, 
+    field: str,
+    values: List[str] = [],
+    admin: User = Depends(get_admin_user)
+):
+    filter_data = ProductFilter(
+        name=name,
+        type=type,
+        field=field,
+        values=values
+    )
+    await db.product_filters.insert_one(filter_data.dict())
+    return filter_data
+
+@api_router.put("/admin/product-filters/{filter_id}")
+async def update_product_filter(
+    filter_id: str,
+    name: str,
+    type: str, 
+    field: str,
+    values: List[str] = [],
+    admin: User = Depends(get_admin_user)
+):
+    result = await db.product_filters.update_one(
+        {"id": filter_id},
+        {"$set": {
+            "name": name,
+            "type": type,
+            "field": field,
+            "values": values
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Product filter not found")
+    
+    return {"message": "Product filter updated successfully"}
+
+@api_router.delete("/admin/product-filters/{filter_id}")
+async def delete_product_filter(filter_id: str, admin: User = Depends(get_admin_user)):
+    result = await db.product_filters.delete_one({"id": filter_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Product filter not found")
+    return {"message": "Product filter deleted successfully"}
+
+@api_router.put("/admin/product-filters/{filter_id}/toggle")
+async def toggle_product_filter(filter_id: str, active: bool, admin: User = Depends(get_admin_user)):
+    result = await db.product_filters.update_one(
+        {"id": filter_id},
+        {"$set": {"active": active}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Product filter not found")
+    
+    return {"message": f"Product filter {'activated' if active else 'deactivated'} successfully"}
+
+# Endpoint pour récupérer les filtres actifs pour la page produit
+@api_router.get("/product-filters")
+async def get_active_product_filters():
+    filters = await db.product_filters.find({"active": True}).to_list(1000)
+    return [ProductFilter(**filter_data) for filter_data in filters]
+
 @api_router.get("/configurator/categories")
 async def get_configurator_categories():
     return {
