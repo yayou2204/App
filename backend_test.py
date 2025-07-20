@@ -152,7 +152,7 @@ def test_get_products():
         return False
 
 def test_product_search():
-    """Test product search functionality"""
+    """Test product search functionality - LEGACY TEST (kept for compatibility)"""
     try:
         # Search for AMD products
         response = requests.get(f"{BASE_URL}/products?search=AMD")
@@ -162,19 +162,247 @@ def test_product_search():
             if isinstance(products, list):
                 amd_found = any("AMD" in product.get("name", "") or "AMD" in product.get("brand", "") for product in products)
                 if amd_found:
-                    log_test("Product Search", True, f"Search returned {len(products)} products with AMD")
+                    log_test("Product Search (Legacy)", True, f"Search returned {len(products)} products with AMD")
                     return True
                 else:
-                    log_test("Product Search", True, f"Search completed but no AMD products found (expected if no AMD products exist)")
+                    log_test("Product Search (Legacy)", True, f"Search completed but no AMD products found (expected if no AMD products exist)")
                     return True
             else:
-                log_test("Product Search", False, "Invalid response format", str(products))
+                log_test("Product Search (Legacy)", False, "Invalid response format", str(products))
                 return False
         else:
-            log_test("Product Search", False, f"HTTP {response.status_code}", response.text)
+            log_test("Product Search (Legacy)", False, f"HTTP {response.status_code}", response.text)
             return False
     except Exception as e:
-        log_test("Product Search", False, "Request failed", str(e))
+        log_test("Product Search (Legacy)", False, "Request failed", str(e))
+        return False
+
+def test_precise_search_name_only():
+    """Test NEW precise search functionality - searches ONLY in product names"""
+    try:
+        # First, get all products to understand what we're working with
+        all_products_response = requests.get(f"{BASE_URL}/products")
+        if all_products_response.status_code != 200:
+            log_test("Precise Search - Name Only", False, "Could not fetch products for testing")
+            return False
+        
+        all_products = all_products_response.json()
+        
+        # Test 1: Search for "AMD" - should only return products with "AMD" in the NAME
+        response = requests.get(f"{BASE_URL}/products?search=AMD")
+        if response.status_code == 200:
+            amd_products = response.json()
+            
+            # Verify ALL returned products have "AMD" in their NAME (not just brand)
+            valid_results = True
+            for product in amd_products:
+                if "AMD" not in product.get("name", ""):
+                    valid_results = False
+                    log_test("Precise Search - Name Only", False, f"Product '{product.get('name')}' returned but doesn't contain 'AMD' in name")
+                    return False
+            
+            # Count products that have AMD in name vs brand only
+            name_matches = [p for p in all_products if "AMD" in p.get("name", "")]
+            brand_only_matches = [p for p in all_products if "AMD" in p.get("brand", "") and "AMD" not in p.get("name", "")]
+            
+            if len(amd_products) == len(name_matches):
+                log_test("Precise Search - Name Only", True, f"✅ PRECISE SEARCH WORKING: Found {len(amd_products)} products with 'AMD' in NAME only (excluded {len(brand_only_matches)} brand-only matches)")
+                return True
+            else:
+                log_test("Precise Search - Name Only", False, f"Expected {len(name_matches)} name matches, got {len(amd_products)} results")
+                return False
+        else:
+            log_test("Precise Search - Name Only", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Precise Search - Name Only", False, "Request failed", str(e))
+        return False
+
+def test_precise_search_ryzen():
+    """Test precise search for 'Ryzen' - should only find products with Ryzen in name"""
+    try:
+        response = requests.get(f"{BASE_URL}/products?search=Ryzen")
+        
+        if response.status_code == 200:
+            products = response.json()
+            
+            # Verify all returned products have "Ryzen" in their NAME
+            for product in products:
+                if "Ryzen" not in product.get("name", ""):
+                    log_test("Precise Search - Ryzen", False, f"Product '{product.get('name')}' returned but doesn't contain 'Ryzen' in name")
+                    return False
+            
+            log_test("Precise Search - Ryzen", True, f"✅ Found {len(products)} products with 'Ryzen' in NAME only")
+            return True
+        else:
+            log_test("Precise Search - Ryzen", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Precise Search - Ryzen", False, "Request failed", str(e))
+        return False
+
+def test_precise_search_rtx():
+    """Test precise search for 'RTX' - should only find products with RTX in name"""
+    try:
+        response = requests.get(f"{BASE_URL}/products?search=RTX")
+        
+        if response.status_code == 200:
+            products = response.json()
+            
+            # Verify all returned products have "RTX" in their NAME
+            for product in products:
+                if "RTX" not in product.get("name", ""):
+                    log_test("Precise Search - RTX", False, f"Product '{product.get('name')}' returned but doesn't contain 'RTX' in name")
+                    return False
+            
+            log_test("Precise Search - RTX", True, f"✅ Found {len(products)} products with 'RTX' in NAME only")
+            return True
+        else:
+            log_test("Precise Search - RTX", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Precise Search - RTX", False, "Request failed", str(e))
+        return False
+
+def test_precise_search_strix():
+    """Test precise search for 'STRIX' - should only find products with STRIX in name"""
+    try:
+        response = requests.get(f"{BASE_URL}/products?search=STRIX")
+        
+        if response.status_code == 200:
+            products = response.json()
+            
+            # Verify all returned products have "STRIX" in their NAME
+            for product in products:
+                if "STRIX" not in product.get("name", ""):
+                    log_test("Precise Search - STRIX", False, f"Product '{product.get('name')}' returned but doesn't contain 'STRIX' in name")
+                    return False
+            
+            log_test("Precise Search - STRIX", True, f"✅ Found {len(products)} products with 'STRIX' in NAME only")
+            return True
+        else:
+            log_test("Precise Search - STRIX", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Precise Search - STRIX", False, "Request failed", str(e))
+        return False
+
+def test_precise_search_case_insensitive():
+    """Test that precise search is case-insensitive"""
+    try:
+        # Test with different cases
+        test_cases = ["amd", "AMD", "Amd", "aMd"]
+        results = []
+        
+        for search_term in test_cases:
+            response = requests.get(f"{BASE_URL}/products?search={search_term}")
+            if response.status_code == 200:
+                products = response.json()
+                results.append(len(products))
+            else:
+                log_test("Precise Search - Case Insensitive", False, f"Failed to search for '{search_term}'")
+                return False
+        
+        # All searches should return the same number of results
+        if len(set(results)) == 1:
+            log_test("Precise Search - Case Insensitive", True, f"✅ Case-insensitive search working: all variations returned {results[0]} products")
+            return True
+        else:
+            log_test("Precise Search - Case Insensitive", False, f"Case sensitivity issue: results varied {results}")
+            return False
+    except Exception as e:
+        log_test("Precise Search - Case Insensitive", False, "Request failed", str(e))
+        return False
+
+def test_precise_search_exclusion():
+    """Test that search excludes products where term is only in brand/description"""
+    try:
+        # Get all products first
+        all_response = requests.get(f"{BASE_URL}/products")
+        if all_response.status_code != 200:
+            log_test("Precise Search - Exclusion Test", False, "Could not fetch all products")
+            return False
+        
+        all_products = all_response.json()
+        
+        # Find products that have "NVIDIA" in brand but NOT in name
+        nvidia_brand_only = []
+        nvidia_in_name = []
+        
+        for product in all_products:
+            name = product.get("name", "")
+            brand = product.get("brand", "")
+            
+            if "NVIDIA" in brand and "NVIDIA" not in name:
+                nvidia_brand_only.append(product)
+            elif "NVIDIA" in name:
+                nvidia_in_name.append(product)
+        
+        # Now search for "NVIDIA"
+        search_response = requests.get(f"{BASE_URL}/products?search=NVIDIA")
+        if search_response.status_code == 200:
+            search_results = search_response.json()
+            
+            # Should only return products with NVIDIA in name, not brand-only
+            if len(search_results) == len(nvidia_in_name):
+                log_test("Precise Search - Exclusion Test", True, f"✅ EXCLUSION WORKING: Found {len(search_results)} products with 'NVIDIA' in name, excluded {len(nvidia_brand_only)} brand-only matches")
+                return True
+            else:
+                log_test("Precise Search - Exclusion Test", False, f"Expected {len(nvidia_in_name)} name matches, got {len(search_results)} results. Brand-only products: {len(nvidia_brand_only)}")
+                return False
+        else:
+            log_test("Precise Search - Exclusion Test", False, f"Search failed: {search_response.status_code}")
+            return False
+    except Exception as e:
+        log_test("Precise Search - Exclusion Test", False, "Request failed", str(e))
+        return False
+
+def test_precise_search_empty_results():
+    """Test search with terms that should return empty results"""
+    try:
+        # Search for a term that likely doesn't exist in any product names
+        response = requests.get(f"{BASE_URL}/products?search=NONEXISTENTTERM12345")
+        
+        if response.status_code == 200:
+            products = response.json()
+            if len(products) == 0:
+                log_test("Precise Search - Empty Results", True, "✅ Empty search results handled correctly")
+                return True
+            else:
+                log_test("Precise Search - Empty Results", False, f"Expected 0 results for non-existent term, got {len(products)}")
+                return False
+        else:
+            log_test("Precise Search - Empty Results", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Precise Search - Empty Results", False, "Request failed", str(e))
+        return False
+
+def test_precise_search_with_category():
+    """Test that precise search works correctly when combined with category filtering"""
+    try:
+        # Search for "AMD" in CPU category only
+        response = requests.get(f"{BASE_URL}/products?search=AMD&category=CPU")
+        
+        if response.status_code == 200:
+            products = response.json()
+            
+            # Verify all results have "AMD" in name AND are CPU category
+            for product in products:
+                if "AMD" not in product.get("name", ""):
+                    log_test("Precise Search with Category", False, f"Product '{product.get('name')}' doesn't have 'AMD' in name")
+                    return False
+                if product.get("category") != "CPU":
+                    log_test("Precise Search with Category", False, f"Product '{product.get('name')}' is not CPU category")
+                    return False
+            
+            log_test("Precise Search with Category", True, f"✅ Combined search+category returned {len(products)} valid results")
+            return True
+        else:
+            log_test("Precise Search with Category", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Precise Search with Category", False, "Request failed", str(e))
         return False
 
 def test_product_category_filter():
