@@ -127,6 +127,7 @@ const Header = () => {
           <nav className="flex items-center space-x-4">
             <a href="/products" className="hover:text-blue-300">Produits</a>
             <a href="/configurator" className="hover:text-blue-300">Configurateur</a>
+            {user && <a href="/support" className="hover:text-blue-300">Support</a>}
             {user ? (
               <div className="flex items-center space-x-4">
                 <a href="/cart" className="hover:text-blue-300 relative group">
