@@ -1324,7 +1324,7 @@ const ProductDetail = ({ productId }) => {
           {reviewStats && reviewStats.total_reviews > 0 && (
             <div className="mb-4 flex items-center">
               <div className="flex items-center mr-4">
-                {renderStars(Math.round(reviewStats.average_rating))}
+                {renderStars(reviewStats.average_rating)}
                 <span className="ml-2 text-sm text-gray-600">
                   {reviewStats.average_rating}/5 ({reviewStats.total_reviews} avis)
                 </span>
