@@ -260,9 +260,10 @@ async def admin_login(admin_data: AdminLogin):
     return {"access_token": access_token, "token_type": "bearer", "user": {"id": admin_user["id"], "username": "admin", "email": admin_user["email"], "is_admin": True}}
 
 @api_router.get("/products")
-async def get_products(category: Optional[str] = None, search: Optional[str] = None):
+async def get_products(request: Request, category: Optional[str] = None, search: Optional[str] = None):
     filter_criteria = {}
     
+    # Filtres existants
     if category:
         filter_criteria["category"] = category
     
@@ -272,6 +273,47 @@ async def get_products(category: Optional[str] = None, search: Optional[str] = N
             {"brand": {"$regex": search, "$options": "i"}},
             {"description": {"$regex": search, "$options": "i"}}
         ]
+    
+    # Filtres dynamiques - analyser tous les paramètres de requête
+    query_params = dict(request.query_params)
+    
+    # Récupérer les filtres actifs
+    active_filters = await db.product_filters.find({"active": True}).to_list(1000)
+    
+    for filter_config in active_filters:
+        param_name = f"filter_{filter_config['name'].lower().replace(' ', '_')}"
+        if param_name in query_params:
+            filter_value = query_params[param_name]
+            field = filter_config['field']
+            filter_type = filter_config['type']
+            
+            if filter_type == "select" and filter_value:
+                # Pour les filtres de sélection (ex: marque, couleur)
+                if field.startswith("specifications."):
+                    filter_criteria[field] = filter_value
+                else:
+                    filter_criteria[field] = filter_value
+            
+            elif filter_type == "range" and filter_value:
+                # Pour les filtres de plage (ex: prix)
+                try:
+                    if ":" in filter_value:  # Format: "min:max"
+                        min_val, max_val = filter_value.split(":")
+                        range_criteria = {}
+                        if min_val:
+                            range_criteria["$gte"] = float(min_val)
+                        if max_val:
+                            range_criteria["$lte"] = float(max_val)
+                        if range_criteria:
+                            filter_criteria[field] = range_criteria
+                    else:
+                        # Valeur unique
+                        filter_criteria[field] = float(filter_value)
+                except ValueError:
+                    pass  # Ignorer les valeurs invalides
+            
+            elif filter_type == "boolean" and filter_value.lower() in ['true', 'false']:
+                filter_criteria[field] = filter_value.lower() == 'true'
     
     products = await db.products.find(filter_criteria).to_list(1000)
     return [Product(**product) for product in products]
