@@ -1255,6 +1255,12 @@ const ProductDetail = ({ productId }) => {
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
+    
+    if (reviewForm.rating === 0) {
+      alert('Veuillez sélectionner une note avant de soumettre votre avis');
+      return;
+    }
+    
     try {
       await axios.post(`${API}/reviews`, {
         product_id: productId,
