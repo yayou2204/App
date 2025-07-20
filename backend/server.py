@@ -304,11 +304,14 @@ async def get_products(request: Request, category: Optional[str] = None, search:
         filter_criteria["category"] = category
     
     if search:
-        filter_criteria["$or"] = [
-            {"name": {"$regex": search, "$options": "i"}},
-            {"brand": {"$regex": search, "$options": "i"}},
-            {"description": {"$regex": search, "$options": "i"}}
-        ]
+        # Priorité 1: Recherche exacte dans le nom du produit (titre)
+        exact_name_match = {"name": {"$regex": f"\\b{search}\\b", "$options": "i"}}
+        # Priorité 2: Recherche contenant le terme dans le nom
+        partial_name_match = {"name": {"$regex": search, "$options": "i"}}
+        # Priorité 3: Recherche dans la marque seulement si pas trouvé dans le nom
+        brand_match = {"brand": {"$regex": search, "$options": "i"}}
+        
+        filter_criteria["$or"] = [exact_name_match, partial_name_match, brand_match]
     
     # Filtres dynamiques - analyser tous les paramètres de requête
     query_params = dict(request.query_params)
