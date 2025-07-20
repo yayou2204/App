@@ -219,6 +219,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "Implemented product listing with category filtering, search functionality, stock status display, and individual product detail pages."
+      - working: "NA"
+        agent: "main"
+        comment: "FIXED: Search functionality now properly reads URL parameters from header search bar. Added useEffect to parse search and category parameters from URL on component mount."
         
   - task: "PC Configurator Interface"
     implemented: true
@@ -255,6 +258,21 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "Implemented admin panel protected by password 'NEW' with full product CRUD operations, image upload (base64), and stock management."
+      - working: "NA"
+        agent: "main"
+        comment: "ENHANCED: Added comprehensive filtering system in admin panel - search by name/brand/description, filter by category, brand, and stock status. Added clear filters button with counter showing filtered vs total products."
+        
+  - task: "Admin Panel for Promo Code Management"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "CREATED: Added complete promo code management interface in admin panel. Features include: create/edit promo codes with validation, view all codes with status, toggle active/inactive status, delete codes, and comprehensive table display with creation dates."
 
 metadata:
   created_by: "main_agent"
