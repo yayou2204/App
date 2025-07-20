@@ -984,15 +984,6 @@ const Products = () => {
               <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
               <p className="text-gray-600 text-sm mb-2">{product.brand}</p>
               
-              {/* Tag Génération pour CPU et GPU */}
-              {product.generation && (product.category === 'CPU' || product.category === 'GPU') && (
-                <div className="mb-2">
-                  <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full text-xs font-medium">
-                    {product.category === 'CPU' ? '🔧' : '🎮'} {product.generation}
-                  </span>
-                </div>
-              )}
-              
               <p className="text-blue-600 font-bold text-xl mb-2">{product.price} MAD</p>
               <div className="mb-3">
                 {getStockBadge(product)}
