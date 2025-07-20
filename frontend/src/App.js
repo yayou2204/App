@@ -2234,6 +2234,12 @@ const AdminPanel = () => {
         >
           Filtres de produits
         </button>
+        <button
+          className={`px-4 py-2 ${activeTab === 'support' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'}`}
+          onClick={() => setActiveTab('support')}
+        >
+          Support client
+        </button>
       </div>
 
       {activeTab === 'products' && (
