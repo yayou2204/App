@@ -1165,26 +1165,43 @@ const PCConfigurator = () => {
                   })()}
                 </div>
               ) : (
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {availableProducts[category]?.map(product => (
-                    <button
-                      key={product.id}
-                      onClick={() => selectComponent(category, product.id)}
-                      className="w-full text-left p-2 border rounded hover:bg-gray-50 flex justify-between items-center"
-                      disabled={product.stock_status !== 'in_stock'}
-                    >
-                      <div>
-                        <div className="font-medium">{product.name}</div>
-                        <div className="text-sm text-gray-600">{product.brand}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-blue-600 font-semibold">{product.price} MAD</div>
-                        {product.stock_status !== 'in_stock' && (
-                          <div className="text-xs text-red-600">Non disponible</div>
-                        )}
-                      </div>
-                    </button>
-                  )) || <div className="text-gray-500">Chargement...</div>}
+                <div className="space-y-2">
+                  <select
+                    value={selectedComponents[category] || ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        selectComponent(category, e.target.value);
+                      }
+                    }}
+                    className="w-full p-3 border rounded-lg bg-white focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                  >
+                    <option value="">-- Sélectionner un {category} --</option>
+                    {availableProducts[category]?.filter(product => product.stock_status === 'in_stock').map(product => (
+                      <option key={product.id} value={product.id}>
+                        {product.name} - {product.brand} - {product.price} MAD
+                      </option>
+                    )) || []}
+                  </select>
+                  
+                  {availableProducts[category]?.filter(product => product.stock_status !== 'in_stock').length > 0 && (
+                    <div className="text-sm text-gray-500">
+                      <details>
+                        <summary className="cursor-pointer hover:text-gray-700">
+                          Voir les produits non disponibles ({availableProducts[category]?.filter(product => product.stock_status !== 'in_stock').length})
+                        </summary>
+                        <div className="mt-2 pl-4 border-l-2 border-gray-200">
+                          {availableProducts[category]?.filter(product => product.stock_status !== 'in_stock').map(product => (
+                            <div key={product.id} className="text-xs text-gray-400 py-1">
+                              {product.name} - {product.brand} - {product.price} MAD 
+                              <span className="ml-2 text-red-500">
+                                ({product.stock_status === 'out_of_stock' ? 'Rupture de stock' : 'Bientôt disponible'})
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
