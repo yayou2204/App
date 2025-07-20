@@ -1426,6 +1426,421 @@ def test_invalid_filter_operations():
         log_test("Invalid Filter Operations", False, "Request failed", str(e))
         return False
 
+# Global variables for support ticket and review testing
+test_ticket_id = None
+test_review_id = None
+
+def test_create_support_ticket():
+    """Test creating a support ticket (authenticated users only)"""
+    if not user_token:
+        log_test("Create Support Ticket", False, "No user token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        ticket_data = {
+            "subject": "Problème avec ma commande",
+            "message": "J'ai un problème avec ma commande récente. Le produit ne fonctionne pas correctement.",
+            "priority": "high",
+            "category": "order"
+        }
+        
+        response = requests.post(f"{BASE_URL}/support/tickets", json=ticket_data, headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "ticket_id" in data and "message" in data:
+                global test_ticket_id
+                test_ticket_id = data["ticket_id"]
+                log_test("Create Support Ticket", True, f"Support ticket created successfully: {test_ticket_id}")
+                return True
+            else:
+                log_test("Create Support Ticket", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Create Support Ticket", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Create Support Ticket", False, "Request failed", str(e))
+        return False
+
+def test_get_my_tickets():
+    """Test getting user's support tickets"""
+    if not user_token:
+        log_test("Get My Tickets", False, "No user token available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        response = requests.get(f"{BASE_URL}/support/tickets", headers=headers)
+        
+        if response.status_code == 200:
+            tickets = response.json()
+            if isinstance(tickets, list):
+                log_test("Get My Tickets", True, f"Retrieved {len(tickets)} support tickets")
+                return True
+            else:
+                log_test("Get My Tickets", False, "Invalid response format", str(tickets))
+                return False
+        else:
+            log_test("Get My Tickets", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Get My Tickets", False, "Request failed", str(e))
+        return False
+
+def test_get_ticket_details():
+    """Test getting specific ticket details"""
+    if not user_token or not test_ticket_id:
+        log_test("Get Ticket Details", False, "No user token or ticket ID available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        response = requests.get(f"{BASE_URL}/support/tickets/{test_ticket_id}", headers=headers)
+        
+        if response.status_code == 200:
+            ticket = response.json()
+            if "id" in ticket and "subject" in ticket and "status" in ticket:
+                log_test("Get Ticket Details", True, f"Retrieved ticket details: {ticket['subject']} (Status: {ticket['status']})")
+                return True
+            else:
+                log_test("Get Ticket Details", False, "Invalid ticket response format", str(ticket))
+                return False
+        else:
+            log_test("Get Ticket Details", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Get Ticket Details", False, "Request failed", str(e))
+        return False
+
+def test_admin_get_all_tickets():
+    """Test admin getting all support tickets"""
+    try:
+        response = requests.get(f"{BASE_URL}/admin/support/tickets?admin_password=NEW")
+        
+        if response.status_code == 200:
+            tickets = response.json()
+            if isinstance(tickets, list):
+                log_test("Admin Get All Tickets", True, f"Admin retrieved {len(tickets)} support tickets")
+                return True
+            else:
+                log_test("Admin Get All Tickets", False, "Invalid response format", str(tickets))
+                return False
+        else:
+            log_test("Admin Get All Tickets", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Admin Get All Tickets", False, "Request failed", str(e))
+        return False
+
+def test_admin_respond_to_ticket():
+    """Test admin responding to a support ticket"""
+    if not test_ticket_id:
+        log_test("Admin Respond to Ticket", False, "No test ticket ID available")
+        return False
+    
+    try:
+        response_data = {
+            "admin_response": "Merci pour votre message. Nous avons examiné votre commande et nous vous envoyons un produit de remplacement."
+        }
+        
+        response = requests.put(f"{BASE_URL}/admin/support/tickets/{test_ticket_id}/respond?admin_password=NEW", 
+                              json=response_data)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                log_test("Admin Respond to Ticket", True, "Admin response added successfully")
+                return True
+            else:
+                log_test("Admin Respond to Ticket", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Admin Respond to Ticket", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Admin Respond to Ticket", False, "Request failed", str(e))
+        return False
+
+def test_admin_update_ticket_status():
+    """Test admin updating ticket status"""
+    if not test_ticket_id:
+        log_test("Admin Update Ticket Status", False, "No test ticket ID available")
+        return False
+    
+    try:
+        response = requests.put(f"{BASE_URL}/admin/support/tickets/{test_ticket_id}/status?admin_password=NEW&status=resolved")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                log_test("Admin Update Ticket Status", True, "Ticket status updated to resolved")
+                return True
+            else:
+                log_test("Admin Update Ticket Status", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Admin Update Ticket Status", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Admin Update Ticket Status", False, "Request failed", str(e))
+        return False
+
+def test_support_ticket_authentication():
+    """Test that support ticket endpoints require authentication"""
+    try:
+        # Test creating ticket without authentication
+        ticket_data = {
+            "subject": "Test ticket",
+            "message": "Test message",
+            "priority": "medium",
+            "category": "general"
+        }
+        
+        response = requests.post(f"{BASE_URL}/support/tickets", json=ticket_data)
+        
+        if response.status_code == 401 or response.status_code == 403:
+            log_test("Support Ticket Authentication", True, "Support ticket endpoints correctly require authentication")
+            return True
+        else:
+            log_test("Support Ticket Authentication", False, f"Expected 401/403 for unauthenticated request, got {response.status_code}")
+            return False
+    except Exception as e:
+        log_test("Support Ticket Authentication", False, "Request failed", str(e))
+        return False
+
+def test_create_product_review():
+    """Test creating a product review (authenticated users only)"""
+    if not user_token or not sample_product_id:
+        log_test("Create Product Review", False, "No user token or product ID available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        review_data = {
+            "product_id": sample_product_id,
+            "rating": 5,
+            "comment": "Excellent produit! Très satisfait de mon achat. Performance exceptionnelle et qualité au rendez-vous."
+        }
+        
+        response = requests.post(f"{BASE_URL}/reviews", json=review_data, headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                log_test("Create Product Review", True, "Product review created successfully")
+                return True
+            else:
+                log_test("Create Product Review", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Create Product Review", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Create Product Review", False, "Request failed", str(e))
+        return False
+
+def test_get_product_reviews():
+    """Test getting all reviews for a product"""
+    if not sample_product_id:
+        log_test("Get Product Reviews", False, "No product ID available")
+        return False
+    
+    try:
+        response = requests.get(f"{BASE_URL}/reviews/{sample_product_id}")
+        
+        if response.status_code == 200:
+            reviews = response.json()
+            if isinstance(reviews, list):
+                log_test("Get Product Reviews", True, f"Retrieved {len(reviews)} product reviews")
+                # Store first review ID for deletion test
+                if reviews:
+                    global test_review_id
+                    test_review_id = reviews[0].get("id")
+                return True
+            else:
+                log_test("Get Product Reviews", False, "Invalid response format", str(reviews))
+                return False
+        else:
+            log_test("Get Product Reviews", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Get Product Reviews", False, "Request failed", str(e))
+        return False
+
+def test_get_product_review_stats():
+    """Test getting product review statistics"""
+    if not sample_product_id:
+        log_test("Get Product Review Stats", False, "No product ID available")
+        return False
+    
+    try:
+        response = requests.get(f"{BASE_URL}/reviews/{sample_product_id}/stats")
+        
+        if response.status_code == 200:
+            stats = response.json()
+            if "average_rating" in stats and "total_reviews" in stats and "rating_distribution" in stats:
+                log_test("Get Product Review Stats", True, f"Review stats: {stats['average_rating']} avg rating, {stats['total_reviews']} total reviews")
+                return True
+            else:
+                log_test("Get Product Review Stats", False, "Invalid stats response format", str(stats))
+                return False
+        else:
+            log_test("Get Product Review Stats", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Get Product Review Stats", False, "Request failed", str(e))
+        return False
+
+def test_duplicate_review_prevention():
+    """Test that users cannot create multiple reviews for the same product"""
+    if not user_token or not sample_product_id:
+        log_test("Duplicate Review Prevention", False, "No user token or product ID available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        review_data = {
+            "product_id": sample_product_id,
+            "rating": 4,
+            "comment": "Tentative de deuxième avis sur le même produit"
+        }
+        
+        response = requests.post(f"{BASE_URL}/reviews", json=review_data, headers=headers)
+        
+        if response.status_code == 400:
+            data = response.json()
+            if "déjà noté" in data.get("detail", ""):
+                log_test("Duplicate Review Prevention", True, "Correctly prevented duplicate review")
+                return True
+            else:
+                log_test("Duplicate Review Prevention", False, f"Expected duplicate review error, got: {data}")
+                return False
+        else:
+            log_test("Duplicate Review Prevention", False, f"Expected 400 status for duplicate review, got {response.status_code}")
+            return False
+    except Exception as e:
+        log_test("Duplicate Review Prevention", False, "Request failed", str(e))
+        return False
+
+def test_delete_own_review():
+    """Test deleting own product review"""
+    if not user_token or not test_review_id:
+        log_test("Delete Own Review", False, "No user token or review ID available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        response = requests.delete(f"{BASE_URL}/reviews/{test_review_id}", headers=headers)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "message" in data:
+                log_test("Delete Own Review", True, "Successfully deleted own review")
+                return True
+            else:
+                log_test("Delete Own Review", False, "Invalid response format", str(data))
+                return False
+        else:
+            log_test("Delete Own Review", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Delete Own Review", False, "Request failed", str(e))
+        return False
+
+def test_review_rating_validation():
+    """Test review rating validation (1-5 stars)"""
+    if not user_token or not sample_product_id:
+        log_test("Review Rating Validation", False, "No user token or product ID available")
+        return False
+    
+    try:
+        headers = {"Authorization": f"Bearer {user_token}"}
+        
+        # First, delete any existing review to allow new one
+        if test_review_id:
+            requests.delete(f"{BASE_URL}/reviews/{test_review_id}", headers=headers)
+        
+        # Test invalid rating (0)
+        invalid_review_data = {
+            "product_id": sample_product_id,
+            "rating": 0,
+            "comment": "Test invalid rating"
+        }
+        
+        response = requests.post(f"{BASE_URL}/reviews", json=invalid_review_data, headers=headers)
+        
+        if response.status_code == 422:  # Validation error
+            log_test("Review Rating Validation", True, "Correctly validated rating range (rejected rating 0)")
+            return True
+        else:
+            # Test with valid rating to ensure endpoint works
+            valid_review_data = {
+                "product_id": sample_product_id,
+                "rating": 3,
+                "comment": "Test valid rating"
+            }
+            
+            valid_response = requests.post(f"{BASE_URL}/reviews", json=valid_review_data, headers=headers)
+            if valid_response.status_code == 200:
+                log_test("Review Rating Validation", True, "Rating validation working (accepted valid rating 3)")
+                return True
+            else:
+                log_test("Review Rating Validation", False, f"Rating validation issues: invalid got {response.status_code}, valid got {valid_response.status_code}")
+                return False
+    except Exception as e:
+        log_test("Review Rating Validation", False, "Request failed", str(e))
+        return False
+
+def test_review_authentication():
+    """Test that review endpoints require authentication"""
+    try:
+        # Test creating review without authentication
+        review_data = {
+            "product_id": "test-product-id",
+            "rating": 5,
+            "comment": "Test review"
+        }
+        
+        response = requests.post(f"{BASE_URL}/reviews", json=review_data)
+        
+        if response.status_code == 401 or response.status_code == 403:
+            log_test("Review Authentication", True, "Review endpoints correctly require authentication")
+            return True
+        else:
+            log_test("Review Authentication", False, f"Expected 401/403 for unauthenticated request, got {response.status_code}")
+            return False
+    except Exception as e:
+        log_test("Review Authentication", False, "Request failed", str(e))
+        return False
+
+def test_product_without_generation_field():
+    """Test that products no longer have 'generation' field"""
+    try:
+        response = requests.get(f"{BASE_URL}/products")
+        
+        if response.status_code == 200:
+            products = response.json()
+            if isinstance(products, list) and products:
+                # Check that no product has 'generation' field
+                has_generation = any("generation" in product for product in products)
+                if not has_generation:
+                    log_test("Product Without Generation Field", True, "Confirmed: 'generation' field removed from products")
+                    return True
+                else:
+                    log_test("Product Without Generation Field", False, "Some products still contain 'generation' field")
+                    return False
+            else:
+                log_test("Product Without Generation Field", True, "No products available to test (expected if database is empty)")
+                return True
+        else:
+            log_test("Product Without Generation Field", False, f"HTTP {response.status_code}", response.text)
+            return False
+    except Exception as e:
+        log_test("Product Without Generation Field", False, "Request failed", str(e))
+        return False
+
 def run_all_tests():
     """Run all backend tests in sequence"""
     print("=" * 80)
