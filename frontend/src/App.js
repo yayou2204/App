@@ -1900,6 +1900,7 @@ const AdminPanel = () => {
     price: '',
     description: '',
     stock_quantity: '',
+    stock_status: 'in_stock',
     specifications: '',
     image_base64: ''
   });
