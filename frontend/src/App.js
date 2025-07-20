@@ -496,12 +496,21 @@ const AdminLogin = () => {
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
+    console.log('🔍 Admin form submit triggered');
     e.preventDefault();
+    console.log('🔍 Password:', password);
+    console.log('🔍 API URL:', `${API}/admin/login`);
+    
     try {
+      console.log('🔍 Sending POST request to admin login...');
       const response = await axios.post(`${API}/admin/login`, { password });
+      console.log('🔍 Login response:', response.data);
+      
       login(response.data.access_token, response.data.user);
+      console.log('🔍 Login context updated, redirecting...');
       window.location.href = '/admin';
     } catch (error) {
+      console.error('🔍 Admin login error:', error);
       setError('Mot de passe administrateur incorrect');
     }
   };
