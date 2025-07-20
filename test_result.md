@@ -408,9 +408,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Synchronisation des étoiles avec les notes exactes"  
-    - "Correction option Bientôt disponible dans panel admin"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -440,3 +438,5 @@ agent_communication:
     message: "NOUVELLE FONCTIONNALITÉ DE RECHERCHE PRÉCISE IMPLÉMENTÉE: Modifié la fonctionnalité de recherche pour qu'elle soit plus précise. Maintenant, quand un utilisateur recherche un mot-clé, la recherche ne se fait QUE dans le nom/titre des produits (plus dans la marque ou description). Changement technique: filter_criteria['name'] = {'$regex': search, '$options': 'i'} au lieu de rechercher dans name, brand, et description. Cette modification rend la recherche plus précise et ciblée sur les titres de produits uniquement. Prêt pour tests backend de cette nouvelle fonctionnalité de recherche précise."
   - agent: "main"
     message: "NOUVELLES AMÉLIORATIONS IMPLÉMENTÉES: 1) SYNCHRONISATION ÉTOILES - Corrigé l'affichage des étoiles pour qu'elles correspondent exactement aux notes données par les clients. Au lieu d'arrondir 4.2 étoiles à 4, maintenant affiche 4.2 avec des étoiles partiellement remplies. 2) OPTION BIENTÔT DISPONIBLE - Corrigé l'affichage dans le panel admin et la logique backend pour que l'option 'Bientôt disponible' fonctionne correctement. L'option existait dans le formulaire mais ne s'affichait pas dans la liste des produits. Prêt pour tests backend et frontend."
+  - agent: "testing"
+    message: "✅ RECENT MODIFICATIONS TESTING COMPLETE: All 64 backend tests passed (100% success rate) including 5 new tests for recent modifications. STAR SYNCHRONIZATION VERIFIED: GET /api/reviews/{product_id}/stats returns exact decimal ratings (4.0, 4.2, etc.) with proper precision, not rounded to integers. Backend supports precise star display for frontend synchronization. COMING SOON OPTION FULLY TESTED: POST/PUT /api/admin/products correctly respect stock_status parameter. Successfully tested all 3 values: 'in_stock', 'out_of_stock', 'coming_soon'. Backend logic modified to use provided stock_status instead of auto-calculating from quantity. Both recent modifications are backend-ready and fully operational."
