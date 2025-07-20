@@ -280,8 +280,8 @@ const Homepage = () => {
             </p>
             <p className="text-lg text-gray-700 mb-8 leading-relaxed">
               Que vous soyez un gamer occasionnel ou un passionné d'e-sport, notre équipe d'experts vous accompagne 
-              dans le choix et l'assemblage de votre configuration parfaite. Nous travaillons avec les plus grandes 
-              marques comme AMD, Intel, NVIDIA, ASUS, MSI, et bien d'autres.
+              dans le choix et l'assemblage de votre configuration parfaite. Nous fournissons des composants 
+              de qualité supérieure pour créer votre configuration gaming idéale.
             </p>
             <div className="grid md:grid-cols-2 gap-8 text-left">
               <div>
