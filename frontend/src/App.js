@@ -1780,8 +1780,18 @@ const Cart = () => {
   }, []);
 
   const fetchCart = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setCart({ items: [], total: 0, discount: 0, promo_code: null });
+      setCartItemsWithDetails([]);
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const response = await axios.get(`${API}/cart`);
+      const response = await axios.get(`${API}/cart`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const cartData = response.data;
       setCart(cartData);
       
