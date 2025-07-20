@@ -2173,22 +2173,6 @@ const AdminPanel = () => {
                   />
                 </div>
 
-                {/* Champ Génération - Uniquement pour CPU et GPU */}
-                {(productForm.category === 'CPU' || productForm.category === 'GPU') && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Génération {productForm.category === 'CPU' ? '(ex: AMD Ryzen 5000, Intel 12th Gen)' : '(ex: RTX 40 Series, RX 7000)'}
-                    </label>
-                    <input
-                      type="text"
-                      value={productForm.generation}
-                      onChange={(e) => setProductForm({...productForm, generation: e.target.value})}
-                      className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-                      placeholder={productForm.category === 'CPU' ? 'ex: Ryzen 5000, Core 12th Gen' : 'ex: RTX 40 Series, RX 7000'}
-                    />
-                  </div>
-                )}
-
                 <div>
                   <label className="block text-sm font-medium mb-1">Prix (MAD)</label>
                   <input
