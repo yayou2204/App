@@ -240,11 +240,11 @@ frontend:
         
   - task: "Product Catalog and Search"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -252,6 +252,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "FIXED: Search functionality now properly reads URL parameters from header search bar. Added useEffect to parse search and category parameters from URL on component mount."
+      - working: true
+        agent: "main"
+        comment: "ENHANCED: Intégré les filtres dynamiques du backend - récupération via /api/product-filters, interface pour 3 types (select/range/boolean), filtres actifs visibles avec couleurs distinctes, support des paramètres dynamiques dans les requêtes backend. Barre de recherche fonctionnelle avec redirection correcte vers /products."
         
   - task: "PC Configurator Interface"
     implemented: true
