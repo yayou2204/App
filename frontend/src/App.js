@@ -1852,6 +1852,11 @@ const AdminPanel = () => {
   });
   const [newFilterValue, setNewFilterValue] = useState('');
   
+  // Support tickets state
+  const [supportTickets, setSupportTickets] = useState([]);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [adminResponse, setAdminResponse] = useState('');
+  
   const [productForm, setProductForm] = useState({
     name: '',
     category: 'CPU',
