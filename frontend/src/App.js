@@ -1401,30 +1401,69 @@ const AdminPanel = () => {
     setSearchAdmin('');
   };
 
-  const handleSubmit = async (e) => {
+  const handlePromoSubmit = async (e) => {
     e.preventDefault();
     
     try {
       const formData = {
-        ...productForm,
-        price: parseFloat(productForm.price),
-        stock_quantity: parseInt(productForm.stock_quantity),
-        specifications: productForm.specifications ? JSON.parse(productForm.specifications) : {}
+        code: promoForm.code.toUpperCase(),
+        discount_percentage: parseFloat(promoForm.discount_percentage)
       };
 
-      if (editingProduct) {
-        await axios.put(`${API}/admin/products/${editingProduct.id}`, formData);
-        alert('Produit modifié avec succès !');
+      if (editingPromo) {
+        // Update existing promo code
+        await axios.put(`${API}/admin/promo-codes/${editingPromo.id}`, formData);
+        alert('Code promo modifié avec succès !');
       } else {
-        await axios.post(`${API}/admin/products`, formData);
-        alert('Produit ajouté avec succès !');
+        // Create new promo code
+        await axios.post(`${API}/admin/promo-codes`, formData);
+        alert('Code promo créé avec succès !');
       }
       
-      resetForm();
-      fetchProducts();
+      resetPromoForm();
+      fetchPromoCodes();
     } catch (error) {
       console.error('Erreur:', error);
       alert('Erreur lors de l\'opération');
+    }
+  };
+
+  const resetPromoForm = () => {
+    setPromoForm({ code: '', discount_percentage: '' });
+    setShowAddPromo(false);
+    setEditingPromo(null);
+  };
+
+  const editPromo = (promo) => {
+    setPromoForm({
+      code: promo.code,
+      discount_percentage: promo.discount_percentage.toString()
+    });
+    setEditingPromo(promo);
+    setShowAddPromo(true);
+  };
+
+  const deletePromo = async (promoId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce code promo ?')) return;
+    
+    try {
+      await axios.delete(`${API}/admin/promo-codes/${promoId}`);
+      alert('Code promo supprimé avec succès !');
+      fetchPromoCodes();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  const togglePromoStatus = async (promoId, currentStatus) => {
+    try {
+      await axios.put(`${API}/admin/promo-codes/${promoId}/toggle`, { active: !currentStatus });
+      alert(`Code promo ${!currentStatus ? 'activé' : 'désactivé'} avec succès !`);
+      fetchPromoCodes();
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Erreur lors du changement de statut');
     }
   };
 
