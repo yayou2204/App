@@ -327,7 +327,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Product Filters System"
     - "Admin Panel for Product Filters Management"  
   stuck_tasks: []
   test_all: false
