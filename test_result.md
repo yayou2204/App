@@ -261,12 +261,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "User Authentication System"
-    - "Product Management API"
-    - "Shopping Cart System"
-    - "PC Configurator with Compatibility"
     - "Homepage with Carousel"
     - "User Authentication UI"
+    - "Product Catalog and Search"
+    - "PC Configurator Interface"
+    - "Shopping Cart Interface"
+    - "Admin Panel for Product Management"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
