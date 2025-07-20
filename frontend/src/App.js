@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext, createContext } from "react";
 import "./App.css";
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://2e732031-01fc-424e-b826-f415abaa8c9e.preview.emergentagent.com';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://a9ce45b8-ba87-426a-abfa-3a78e2e1314c.preview.emergentagent.com';
 const API = `${BACKEND_URL}/api`;
 
 // Auth Context
