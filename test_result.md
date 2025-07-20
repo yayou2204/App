@@ -258,15 +258,18 @@ frontend:
         
   - task: "PC Configurator Interface"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented PC configurator UI with component selection, compatibility validation, price calculation, and configuration saving."
+      - working: true
+        agent: "main"
+        comment: "ENHANCED: Remplacé les listes scrollables par des listes déroulantes (select) pour chaque composant. Ajout de séparation produits disponibles/non-disponibles avec section collapsible pour les produits hors stock. Interface plus propre et intuitive."
         
   - task: "Shopping Cart Interface"
     implemented: true
