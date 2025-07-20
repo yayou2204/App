@@ -356,7 +356,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Panel for Product Filters Management"  
+    - "Product Reviews Display in Products List"  
+    - "Homepage Text Modifications"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
