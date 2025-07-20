@@ -913,7 +913,7 @@ const Products = () => {
       ))}
 
       {/* Active Filters Summary */}
-      {(category || selectedBrand || selectedSeries || priceRange) && (
+      {(category || selectedBrand || selectedSeries || priceRange || Object.keys(selectedDynamicFilters).some(key => selectedDynamicFilters[key])) && (
         <div className="mb-6 p-4 bg-blue-50 rounded-lg">
           <h4 className="font-semibold mb-2">Filtres actifs:</h4>
           <div className="flex flex-wrap gap-2">
@@ -937,12 +937,22 @@ const Products = () => {
                 Prix: {priceRanges.find(r => r.value === priceRange)?.label}
               </span>
             )}
+            {Object.entries(selectedDynamicFilters).map(([filterId, value]) => {
+              if (!value) return null;
+              const filter = dynamicFilters.find(f => f.id === filterId);
+              return filter ? (
+                <span key={filterId} className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm">
+                  {filter.name}: {value}
+                </span>
+              ) : null;
+            })}
             <button
               onClick={() => {
                 setCategory('');
                 setSelectedBrand('');
                 setSelectedSeries('');
                 setPriceRange('');
+                setSelectedDynamicFilters({});
               }}
               className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm hover:bg-red-200"
             >
