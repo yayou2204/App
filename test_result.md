@@ -294,9 +294,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Panel for Product Management (with filters)"
-    - "Admin Panel for Promo Code Management"
-    - "Product Catalog and Search (fixed URL params)"
+    - "Shopping Cart System (enhanced endpoints)"
+    - "Shopping Cart Interface (fixed functions)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
