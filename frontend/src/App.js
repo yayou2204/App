@@ -1330,15 +1330,11 @@ const ProductDetail = ({ productId }) => {
             key={i}
             type="button"
             onClick={() => onRatingChange(i + 1)}
-            className={`text-2xl transition-colors duration-200 ${
+            className={`text-2xl transition-colors duration-200 hover:scale-110 transform ${
               i < rating ? 'text-yellow-400' : 'text-gray-400'
-            } hover:text-yellow-400`}
-            style={{
-              color: i < rating ? '#fbbf24' : '#9ca3af',
-              filter: i < rating ? 'none' : 'grayscale(100%)'
-            }}
+            } hover:text-yellow-500`}
           >
-            ⭐
+            {i < rating ? '★' : '☆'}
           </button>
         ))}
       </div>
