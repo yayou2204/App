@@ -2858,6 +2858,15 @@ def run_all_tests():
     test_review_invalid_rating()
     test_review_nonexistent_product()
     
+    # NEW: Recent Modifications Tests (Focus of this testing session)
+    print("🔥 NEW RECENT MODIFICATIONS TESTS")
+    print("-" * 40)
+    test_create_product_with_coming_soon_status()
+    test_update_product_to_coming_soon()
+    test_all_stock_status_values()
+    test_exact_star_rating_calculation()
+    test_review_stats_precision()
+    
     # Summary
     print("=" * 80)
     print("TEST SUMMARY")
