@@ -55,8 +55,16 @@ const CartProvider = ({ children }) => {
   const [showCartAnimation, setShowCartAnimation] = useState(false);
 
   const updateCartCount = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setCartCount(0);
+      return;
+    }
+    
     try {
-      const response = await axios.get(`${API}/cart`);
+      const response = await axios.get(`${API}/cart`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const totalItems = response.data.items.reduce((sum, item) => sum + item.quantity, 0);
       setCartCount(totalItems);
     } catch (error) {
