@@ -1479,6 +1479,25 @@ def run_all_tests():
     test_save_pc_configuration()
     test_get_my_configurations()
     
+    # Product Filters System Tests
+    print("🔍 PRODUCT FILTERS SYSTEM TESTS")
+    print("-" * 40)
+    test_get_product_filters_admin()
+    test_create_select_filter()
+    test_create_range_filter()
+    test_create_boolean_filter()
+    test_create_specifications_filter()
+    test_update_product_filter()
+    test_toggle_product_filter()
+    test_get_active_product_filters()
+    test_product_filtering_by_brand()
+    test_product_filtering_by_price_range()
+    test_product_filtering_by_stock()
+    test_combined_filtering()
+    test_filter_authentication()
+    test_delete_product_filter()
+    test_invalid_filter_operations()
+    
     # Summary
     print("=" * 80)
     print("TEST SUMMARY")
