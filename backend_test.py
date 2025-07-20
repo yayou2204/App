@@ -695,6 +695,7 @@ def run_all_tests():
     test_get_products()
     test_product_search()
     test_product_category_filter()
+    test_search_and_category_combined()
     test_create_product()
     
     # Shopping Cart Tests
@@ -703,11 +704,16 @@ def run_all_tests():
     test_add_to_cart()
     test_get_cart()
     
-    # Promo Code Tests
-    print("🎫 PROMO CODE TESTS")
+    # Enhanced Promo Code Tests
+    print("🎫 ENHANCED PROMO CODE TESTS")
     print("-" * 40)
     test_create_promo_code()
+    test_get_all_promo_codes()
+    test_update_promo_code()
+    test_toggle_promo_code()
+    test_delete_promo_code()
     test_apply_promo_code()
+    test_invalid_promo_operations()
     
     # PC Configurator Tests
     print("🖥️ PC CONFIGURATOR TESTS")
