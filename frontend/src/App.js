@@ -710,11 +710,44 @@ const Products = () => {
   };
 
   const renderStars = (rating) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'} style={{ fontSize: '14px' }}>
-        ⭐
-      </span>
-    ));
+    return Array.from({ length: 5 }, (_, i) => {
+      const fillPercentage = Math.min(Math.max(rating - i, 0), 1);
+      
+      if (fillPercentage === 1) {
+        // Étoile complète
+        return (
+          <span key={i} className="text-yellow-400" style={{ fontSize: '14px' }}>
+            ⭐
+          </span>
+        );
+      } else if (fillPercentage > 0) {
+        // Étoile partielle
+        return (
+          <span key={i} style={{ position: 'relative', display: 'inline-block', fontSize: '14px' }}>
+            <span className="text-gray-300">⭐</span>
+            <span 
+              className="text-yellow-400" 
+              style={{ 
+                position: 'absolute', 
+                left: 0, 
+                top: 0,
+                overflow: 'hidden',
+                width: `${fillPercentage * 100}%`
+              }}
+            >
+              ⭐
+            </span>
+          </span>
+        );
+      } else {
+        // Étoile vide
+        return (
+          <span key={i} className="text-gray-300" style={{ fontSize: '14px' }}>
+            ⭐
+          </span>
+        );
+      }
+    });
   };
 
   const filterProducts = (products) => {
