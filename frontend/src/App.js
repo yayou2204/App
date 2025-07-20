@@ -1324,12 +1324,12 @@ const Cart = () => {
 
   const removeFromCart = async (productId) => {
     try {
-      // Ici on peut ajouter un endpoint pour supprimer du panier
-      // Pour l'instant, on recharge juste le panier
+      await axios.delete(`${API}/cart/remove/${productId}`);
       await fetchCart();
       await updateCartCount();
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
+      alert('Erreur lors de la suppression de l\'article');
     }
   };
 
@@ -1340,12 +1340,16 @@ const Cart = () => {
     }
     
     try {
-      // Ici on peut ajouter un endpoint pour modifier la quantité
-      // Pour l'instant, on recharge juste le panier
+      await axios.put(`${API}/cart/update/${productId}?quantity=${newQuantity}`);
       await fetchCart();
       await updateCartCount();
     } catch (error) {
       console.error('Erreur lors de la mise à jour:', error);
+      if (error.response?.status === 400) {
+        alert('Stock insuffisant pour cette quantité');
+      } else {
+        alert('Erreur lors de la mise à jour de la quantité');
+      }
     }
   };
 
