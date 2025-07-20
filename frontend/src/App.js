@@ -2675,6 +2675,237 @@ const AdminPanel = () => {
   );
 };
 
+// Support Component
+const Support = () => {
+  const { user } = useAuth();
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [ticketForm, setTicketForm] = useState({
+    subject: '',
+    message: '',
+    priority: 'medium',
+    category: 'general'
+  });
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
+  const fetchTickets = async () => {
+    try {
+      const response = await axios.get(`${API}/support/tickets`);
+      setTickets(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des tickets:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateTicket = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/support/tickets`, ticketForm);
+      alert('Ticket créé avec succès !');
+      setShowCreateForm(false);
+      setTicketForm({
+        subject: '',
+        message: '',
+        priority: 'medium',
+        category: 'general'
+      });
+      fetchTickets();
+    } catch (error) {
+      alert('Erreur lors de la création du ticket');
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const statusColors = {
+      'open': 'bg-blue-100 text-blue-800',
+      'in_progress': 'bg-yellow-100 text-yellow-800',
+      'resolved': 'bg-green-100 text-green-800',
+      'closed': 'bg-gray-100 text-gray-800'
+    };
+    
+    const statusLabels = {
+      'open': 'Ouvert',
+      'in_progress': 'En cours',
+      'resolved': 'Résolu',
+      'closed': 'Fermé'
+    };
+    
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[status] || statusColors.open}`}>
+        {statusLabels[status] || status}
+      </span>
+    );
+  };
+
+  const getPriorityBadge = (priority) => {
+    const priorityColors = {
+      'low': 'bg-gray-100 text-gray-800',
+      'medium': 'bg-blue-100 text-blue-800',
+      'high': 'bg-orange-100 text-orange-800',
+      'urgent': 'bg-red-100 text-red-800'
+    };
+    
+    const priorityLabels = {
+      'low': 'Faible',
+      'medium': 'Moyenne',
+      'high': 'Élevée',
+      'urgent': 'Urgent'
+    };
+    
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[priority] || priorityColors.medium}`}>
+        {priorityLabels[priority] || priority}
+      </span>
+    );
+  };
+
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">Service Client</h1>
+          <p>Vous devez être connecté pour accéder au support.</p>
+          <a href="/login" className="bg-blue-600 text-white px-6 py-3 rounded mt-4 inline-block">Se connecter</a>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) return <div className="text-center py-8">Chargement...</div>;
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Service Client</h1>
+        <button
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700"
+        >
+          {showCreateForm ? 'Annuler' : 'Nouveau ticket'}
+        </button>
+      </div>
+
+      {showCreateForm && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Créer un nouveau ticket</h2>
+          <form onSubmit={handleCreateTicket}>
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Priorité</label>
+                <select
+                  value={ticketForm.priority}
+                  onChange={(e) => setTicketForm({...ticketForm, priority: e.target.value})}
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="low">Faible</option>
+                  <option value="medium">Moyenne</option>
+                  <option value="high">Élevée</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Catégorie</label>
+                <select
+                  value={ticketForm.category}
+                  onChange={(e) => setTicketForm({...ticketForm, category: e.target.value})}
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="general">Général</option>
+                  <option value="order">Commande</option>
+                  <option value="technical">Technique</option>
+                  <option value="billing">Facturation</option>
+                </select>
+              </div>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Sujet</label>
+              <input
+                type="text"
+                value={ticketForm.subject}
+                onChange={(e) => setTicketForm({...ticketForm, subject: e.target.value})}
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                required
+                placeholder="Décrivez brièvement votre problème"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Message</label>
+              <textarea
+                value={ticketForm.message}
+                onChange={(e) => setTicketForm({...ticketForm, message: e.target.value})}
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                rows="4"
+                required
+                placeholder="Décrivez votre problème en détail..."
+              />
+            </div>
+            <button
+              type="submit"
+              className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+            >
+              Créer le ticket
+            </button>
+          </form>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {tickets.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            Aucun ticket de support. Créez votre premier ticket pour obtenir de l'aide.
+          </div>
+        ) : (
+          tickets.map((ticket) => (
+            <div key={ticket.id} className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">{ticket.subject}</h3>
+                  <p className="text-gray-600 text-sm">
+                    Créé le {new Date(ticket.created_at).toLocaleDateString('fr-FR')}
+                  </p>
+                </div>
+                <div className="flex space-x-2">
+                  {getPriorityBadge(ticket.priority)}
+                  {getStatusBadge(ticket.status)}
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-gray-700">{ticket.message}</p>
+              </div>
+              
+              {ticket.admin_response && (
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <span className="text-blue-600">💬</span>
+                    </div>
+                    <div className="ml-3">
+                      <h4 className="text-sm font-medium text-blue-800 mb-1">Réponse du support :</h4>
+                      <p className="text-blue-700 text-sm">{ticket.admin_response}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="text-xs text-gray-500 flex justify-between">
+                <span>Catégorie: {ticket.category}</span>
+                <span>Dernière mise à jour: {new Date(ticket.updated_at).toLocaleDateString('fr-FR')}</span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Main App Component with Routing
 const App = () => {
   const [currentPage, setCurrentPage] = useState(window.location.pathname);
