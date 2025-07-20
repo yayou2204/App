@@ -2457,6 +2457,19 @@ const AdminPanel = () => {
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium mb-1">Statut Stock</label>
+                  <select
+                    value={productForm.stock_status}
+                    onChange={(e) => setProductForm({...productForm, stock_status: e.target.value})}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  >
+                    <option value="in_stock">En stock</option>
+                    <option value="out_of_stock">Rupture de stock</option>
+                    <option value="coming_soon">Bientôt disponible</option>
+                  </select>
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium mb-1">Image</label>
                   <input
                     type="file"
