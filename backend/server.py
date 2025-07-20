@@ -70,6 +70,7 @@ class Product(BaseModel):
     image_base64: str
     stock_quantity: int
     stock_status: str  # "in_stock", "out_of_stock", "coming_soon"
+    generation: Optional[str] = None  # Génération (pour CPU et GPU uniquement)
     specifications: Dict[str, Any]
     compatibility_requirements: Dict[str, Any] = {}
     created_at: datetime = Field(default_factory=datetime.utcnow)
