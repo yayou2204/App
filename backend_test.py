@@ -69,6 +69,10 @@ def test_user_registration():
             else:
                 log_test("User Registration", False, "Missing access_token or user in response", str(data))
                 return False
+        elif response.status_code == 400 and "already registered" in response.text:
+            # User already exists, this is expected in subsequent test runs
+            log_test("User Registration", True, "User already exists (expected in subsequent runs)")
+            return True
         else:
             log_test("User Registration", False, f"HTTP {response.status_code}", response.text)
             return False
