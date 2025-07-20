@@ -2239,6 +2239,7 @@ const AdminPanel = () => {
       price: product.price.toString(),
       description: product.description,
       stock_quantity: product.stock_quantity.toString(),
+      stock_status: product.stock_status || 'in_stock',
       specifications: JSON.stringify(product.specifications, null, 2),
       image_base64: product.image_base64 || ''
     });
