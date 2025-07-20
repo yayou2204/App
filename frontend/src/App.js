@@ -1843,6 +1843,150 @@ const AdminPanel = () => {
           </div>
         </div>
       )}
+
+      {activeTab === 'promos' && (
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">Codes Promo</h2>
+            <button
+              onClick={() => setShowAddPromo(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Créer un code promo
+            </button>
+          </div>
+
+          {/* Add/Edit Promo Form */}
+          {showAddPromo && (
+            <div className="bg-white p-6 rounded-lg shadow mb-6">
+              <h3 className="text-lg font-semibold mb-4">
+                {editingPromo ? 'Modifier le code promo' : 'Créer un nouveau code promo'}
+              </h3>
+              
+              <form onSubmit={handlePromoSubmit} className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Code Promo</label>
+                  <input
+                    type="text"
+                    placeholder="ex: GAMING10"
+                    value={promoForm.code}
+                    onChange={(e) => setPromoForm({...promoForm, code: e.target.value.toUpperCase()})}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">Réduction (%)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="99"
+                    step="0.1"
+                    placeholder="ex: 10.5"
+                    value={promoForm.discount_percentage}
+                    onChange={(e) => setPromoForm({...promoForm, discount_percentage: e.target.value})}
+                    className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+
+                <div className="md:col-span-2 flex space-x-4">
+                  <button
+                    type="submit"
+                    className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                  >
+                    {editingPromo ? 'Modifier' : 'Créer'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetPromoForm}
+                    className="bg-gray-600 text-white px-6 py-2 rounded hover:bg-gray-700"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Promo Codes List */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Code
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Réduction
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Statut
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date de création
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {promoCodes.map(promo => (
+                    <tr key={promo.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{promo.code}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {promo.discount_percentage}%
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          promo.active 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {promo.active ? 'Actif' : 'Inactif'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(promo.created_at).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <button
+                          onClick={() => editPromo(promo)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          onClick={() => togglePromoStatus(promo.id, promo.active)}
+                          className={`${promo.active ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
+                        >
+                          {promo.active ? 'Désactiver' : 'Activer'}
+                        </button>
+                        <button
+                          onClick={() => deletePromo(promo.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Supprimer
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {promoCodes.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  Aucun code promo créé pour le moment
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
