@@ -1915,6 +1915,16 @@ const AdminPanel = () => {
     }
   };
 
+  const fetchSupportTickets = async () => {
+    try {
+      const response = await axios.get(`${API}/admin/support/tickets?admin_password=NEW`);
+      setSupportTickets(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des tickets:', error);
+      setSupportTickets([]);
+    }
+  };
+
   // Get unique brands from products
   const getAvailableBrands = () => {
     const brands = new Set();
