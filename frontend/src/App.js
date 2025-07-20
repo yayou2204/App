@@ -496,30 +496,23 @@ const AdminLogin = () => {
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
-    console.log('🔍 React handleSubmit called!');
     e.preventDefault();
     
     try {
-      console.log('🔍 Making request to:', `${API}/admin/login`);
       const response = await axios.post(`${API}/admin/login`, { password });
-      console.log('🔍 Response received:', response.data);
-      
       login(response.data.access_token, response.data.user);
       window.location.href = '/admin';
     } catch (error) {
-      console.error('🔍 Error:', error);
       setError('Mot de passe administrateur incorrect');
     }
   };
 
-  // Fallback avec JavaScript pur au cas où React ne marche pas
+  // Solution de fallback avec JavaScript natif
   useEffect(() => {
     const form = document.querySelector('form');
     if (form) {
-      console.log('🔍 Adding native form listener');
       const nativeHandler = async (e) => {
         e.preventDefault();
-        console.log('🔍 Native form handler called!');
         
         const passwordInput = document.querySelector('input[type="password"]');
         const password = passwordInput?.value;
@@ -530,7 +523,6 @@ const AdminLogin = () => {
         }
         
         try {
-          console.log('🔍 Native request to:', `${BACKEND_URL}/api/admin/login`);
           const response = await fetch(`${BACKEND_URL}/api/admin/login`, {
             method: 'POST',
             headers: {
@@ -540,20 +532,15 @@ const AdminLogin = () => {
           });
           
           const data = await response.json();
-          console.log('🔍 Native response:', data);
           
           if (response.ok) {
-            // Store tokens manually
             localStorage.setItem('token', data.access_token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            
-            // Redirect to admin
             window.location.href = '/admin';
           } else {
             alert('Mot de passe administrateur incorrect');
           }
         } catch (error) {
-          console.error('🔍 Native error:', error);
           alert('Erreur de connexion');
         }
       };
