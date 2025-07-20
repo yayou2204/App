@@ -2211,17 +2211,19 @@ const App = () => {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main>
-          {renderPage()}
-        </main>
-        <footer className="bg-gray-800 text-white py-8">
-          <div className="container mx-auto px-4 text-center">
-            <p>&copy; 2025 INFOTECH.MA - Votre spécialiste en composants PC gaming</p>
-          </div>
-        </footer>
-      </div>
+      <CartProvider>
+        <div className="min-h-screen bg-gray-50">
+          <Header />
+          <main>
+            {renderPage()}
+          </main>
+          <footer className="bg-gray-800 text-white py-8">
+            <div className="container mx-auto px-4 text-center">
+              <p>&copy; 2025 INFOTECH.MA - Votre spécialiste en composants PC gaming</p>
+            </div>
+          </footer>
+        </div>
+      </CartProvider>
     </AuthProvider>
   );
 };
