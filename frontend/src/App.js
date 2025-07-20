@@ -1584,6 +1584,77 @@ const AdminPanel = () => {
             </button>
           </div>
 
+          {/* Filters Section */}
+          <div className="bg-white p-4 rounded-lg shadow mb-6">
+            <h3 className="text-lg font-semibold mb-4">Filtres</h3>
+            <div className="grid md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Recherche</label>
+                <input
+                  type="text"
+                  placeholder="Nom, marque, description..."
+                  value={searchAdmin}
+                  onChange={(e) => setSearchAdmin(e.target.value)}
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Catégorie</label>
+                <select
+                  value={filterCategory}
+                  onChange={(e) => setFilterCategory(e.target.value)}
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="">Toutes les catégories</option>
+                  {['CPU', 'GPU', 'RAM', 'MOTHERBOARD', 'STORAGE', 'PSU', 'CASE', 'COOLING'].map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Marque</label>
+                <select
+                  value={filterBrand}
+                  onChange={(e) => setFilterBrand(e.target.value)}
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="">Toutes les marques</option>
+                  {getAvailableBrands().map(brand => (
+                    <option key={brand} value={brand}>{brand}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Statut Stock</label>
+                <select
+                  value={filterStockStatus}
+                  onChange={(e) => setFilterStockStatus(e.target.value)}
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  <option value="">Tous les statuts</option>
+                  <option value="in_stock">En stock</option>
+                  <option value="out_of_stock">Rupture de stock</option>
+                  <option value="coming_soon">Bientôt disponible</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mt-4 flex space-x-2">
+              <button
+                onClick={clearFilters}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                Réinitialiser filtres
+              </button>
+              <span className="text-sm text-gray-600 self-center">
+                {getFilteredProducts().length} produit(s) affiché(s) sur {products.length}
+              </span>
+            </div>
+          </div>
+
           {/* Add/Edit Product Form */}
           {showAddProduct && (
             <div className="bg-white p-6 rounded-lg shadow mb-6">
