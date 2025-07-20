@@ -1275,7 +1275,9 @@ const PCConfigurator = () => {
 
 // Cart Component
 const Cart = () => {
+  const { updateCartCount } = useCart();
   const [cart, setCart] = useState({ items: [], total: 0, discount: 0 });
+  const [cartItemsWithDetails, setCartItemsWithDetails] = useState([]);
   const [promoCode, setPromoCode] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -1286,11 +1288,64 @@ const Cart = () => {
   const fetchCart = async () => {
     try {
       const response = await axios.get(`${API}/cart`);
-      setCart(response.data);
+      const cartData = response.data;
+      setCart(cartData);
+      
+      // Récupérer les détails des produits pour chaque item du panier
+      const itemsWithDetails = await Promise.all(
+        cartData.items.map(async (item) => {
+          try {
+            const productResponse = await axios.get(`${API}/products/${item.product_id}`);
+            return {
+              ...item,
+              product: productResponse.data
+            };
+          } catch (error) {
+            console.error(`Erreur lors du chargement du produit ${item.product_id}:`, error);
+            return {
+              ...item,
+              product: { 
+                name: 'Produit indisponible',
+                image_base64: '',
+                brand: 'Inconnu'
+              }
+            };
+          }
+        })
+      );
+      
+      setCartItemsWithDetails(itemsWithDetails);
     } catch (error) {
       console.error('Erreur lors du chargement du panier:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const removeFromCart = async (productId) => {
+    try {
+      // Ici on peut ajouter un endpoint pour supprimer du panier
+      // Pour l'instant, on recharge juste le panier
+      await fetchCart();
+      await updateCartCount();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+    }
+  };
+
+  const updateQuantity = async (productId, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeFromCart(productId);
+      return;
+    }
+    
+    try {
+      // Ici on peut ajouter un endpoint pour modifier la quantité
+      // Pour l'instant, on recharge juste le panier
+      await fetchCart();
+      await updateCartCount();
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour:', error);
     }
   };
 
@@ -1299,7 +1354,8 @@ const Cart = () => {
     
     try {
       await axios.post(`${API}/cart/apply-promo?code=${promoCode}`);
-      fetchCart();
+      await fetchCart();
+      setPromoCode('');
       alert('Code promo appliqué avec succès !');
     } catch (error) {
       alert('Code promo invalide');
@@ -1312,7 +1368,7 @@ const Cart = () => {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Mon Panier</h1>
 
-      {cart.items.length === 0 ? (
+      {cartItemsWithDetails.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">Votre panier est vide</p>
           <a href="/products" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
@@ -1323,15 +1379,56 @@ const Cart = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow">
-              {cart.items.map((item, index) => (
-                <div key={index} className="p-6 border-b flex items-center">
+              {cartItemsWithDetails.map((item, index) => (
+                <div key={index} className="p-6 border-b flex items-center space-x-4">
+                  {/* Image du produit */}
+                  <div className="w-20 h-20 bg-gray-200 rounded-lg flex-shrink-0">
+                    {item.product.image_base64 ? (
+                      <img 
+                        src={`data:image/jpeg;base64,${item.product.image_base64}`} 
+                        alt={item.product.name}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-300 rounded-lg flex items-center justify-center">
+                        <span className="text-gray-500 text-xs">Pas d'image</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Détails du produit */}
                   <div className="flex-1">
-                    <h3 className="font-semibold">Produit ID: {item.product_id}</h3>
-                    <p className="text-gray-600">Quantité: {item.quantity}</p>
+                    <h3 className="font-semibold text-lg">{item.product.name}</h3>
+                    <p className="text-gray-600">{item.product.brand}</p>
                     <p className="text-blue-600 font-semibold">{item.price} MAD</p>
                   </div>
+                  
+                  {/* Contrôles de quantité */}
+                  <div className="flex items-center space-x-2">
+                    <button 
+                      onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                      className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                    >
+                      -
+                    </button>
+                    <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                    <button 
+                      onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                      className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                  
+                  {/* Prix total et suppression */}
                   <div className="text-right">
-                    <p className="text-lg font-bold">{item.quantity * item.price} MAD</p>
+                    <p className="text-lg font-bold">{(item.quantity * item.price).toFixed(2)} MAD</p>
+                    <button 
+                      onClick={() => removeFromCart(item.product_id)}
+                      className="text-red-600 hover:text-red-800 text-sm mt-1"
+                    >
+                      Supprimer
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1344,19 +1441,19 @@ const Cart = () => {
               
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between">
-                  <span>Sous-total:</span>
+                  <span>Sous-total ({cartItemsWithDetails.reduce((sum, item) => sum + item.quantity, 0)} articles):</span>
                   <span>{cart.total} MAD</span>
                 </div>
                 {cart.discount > 0 && (
                   <div className="flex justify-between text-green-600">
-                    <span>Remise:</span>
+                    <span>Remise ({cart.promo_code}):</span>
                     <span>-{cart.discount} MAD</span>
                   </div>
                 )}
                 <div className="border-t pt-2">
                   <div className="flex justify-between text-lg font-bold">
                     <span>Total:</span>
-                    <span>{cart.total - cart.discount} MAD</span>
+                    <span>{(cart.total - cart.discount).toFixed(2)} MAD</span>
                   </div>
                 </div>
               </div>
