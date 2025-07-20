@@ -923,6 +923,7 @@ const Products = () => {
       </div>
 
       {/* Dynamic Filters */}
+      {console.log('Rendu des filtres dynamiques:', dynamicFilters)}
       {dynamicFilters.map(filter => (
         <div key={filter.id} className="mb-6">
           <h3 className="text-lg font-semibold mb-3">{filter.name}</h3>
