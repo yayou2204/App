@@ -648,6 +648,21 @@ const Products = () => {
       
       const response = await axios.get(`${API}/products?${params}`);
       setProducts(response.data);
+      
+      // Récupérer les statistiques des avis pour chaque produit
+      const reviewStats = {};
+      await Promise.all(
+        response.data.map(async (product) => {
+          try {
+            const statsResponse = await axios.get(`${API}/reviews/${product.id}/stats`);
+            reviewStats[product.id] = statsResponse.data;
+          } catch (error) {
+            console.error(`Erreur lors du chargement des stats pour ${product.id}:`, error);
+            reviewStats[product.id] = { average_rating: 0, total_reviews: 0 };
+          }
+        })
+      );
+      setProductsReviewStats(reviewStats);
     } catch (error) {
       console.error('Erreur lors du chargement des produits:', error);
     } finally {
