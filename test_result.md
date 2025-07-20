@@ -403,9 +403,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Product Reviews Display in Products List"  
-    - "Homepage Text Modifications"
-    - "Precise Product Search Enhancement"
+    - "Synchronisation des étoiles avec les notes exactes"  
+    - "Correction option Bientôt disponible dans panel admin"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
