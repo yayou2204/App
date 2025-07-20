@@ -1046,7 +1046,7 @@ const Products = () => {
               {productsReviewStats[product.id] && productsReviewStats[product.id].total_reviews > 0 && (
                 <div className="mb-2 flex items-center">
                   <div className="flex items-center">
-                    {renderStars(Math.round(productsReviewStats[product.id].average_rating))}
+                    {renderStars(productsReviewStats[product.id].average_rating)}
                     <span className="ml-1 text-xs text-gray-600">
                       ({productsReviewStats[product.id].total_reviews})
                     </span>
