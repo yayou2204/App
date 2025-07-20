@@ -255,6 +255,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "Implemented shopping cart interface with item management, promo code application, and checkout summary."
+      - working: "NA"
+        agent: "main"
+        comment: "FIXED: Implemented proper removeFromCart() and updateQuantity() functions using new backend endpoints DELETE /api/cart/remove/{product_id} and PUT /api/cart/update/{product_id}. Added proper error handling for stock validation."
         
   - task: "Admin Panel for Product Management"
     implemented: true
