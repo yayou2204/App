@@ -362,8 +362,10 @@ async def get_product(product_id: str):
 
 @api_router.post("/admin/products")
 async def create_product(product_data: ProductCreate, admin: User = Depends(get_admin_user)):
-    # Set stock status based on quantity
-    stock_status = "in_stock" if product_data.stock_quantity > 0 else "out_of_stock"
+    # Use the stock status provided, or default based on quantity if not specified
+    stock_status = product_data.stock_status
+    if not stock_status:
+        stock_status = "in_stock" if product_data.stock_quantity > 0 else "out_of_stock"
     
     product = Product(
         name=product_data.name,
