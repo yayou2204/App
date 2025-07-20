@@ -2929,6 +2929,7 @@ const App = () => {
     if (currentPage === '/configurator') return <PCConfigurator />;
     if (currentPage === '/cart') return <Cart />;
     if (currentPage === '/admin') return <AdminPanel />;
+    if (currentPage === '/support') return <Support />;
     
     return <div className="text-center py-8">Page non trouvée</div>;
   };
