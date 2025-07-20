@@ -1547,6 +1547,9 @@ const AdminPanel = () => {
       if (activeTab === 'promos') {
         fetchPromoCodes();
       }
+      if (activeTab === 'filters') {
+        fetchProductFilters();
+      }
     }
   }, [user, activeTab]);
 
