@@ -325,6 +325,29 @@ frontend:
         agent: "main"
         comment: "CREATED: Added complete product filters management interface in admin panel. New 'Filtres de produits' tab includes: create filters form with name/type/field configuration, dynamic values management for select filters, filters table with edit/delete/toggle actions, and support for 3 filter types (select, range, boolean)."
 
+  - task: "Product Reviews Display in Products List"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "NOUVELLE FONCTIONNALITÉ: Intégré l'affichage des notes d'avis sur la page des produits (liste). Ajout de l'état productsReviewStats, modification de fetchProducts pour récupérer les statistiques d'avis via /api/reviews/{product_id}/stats, ajout de la fonction renderStars, et modification de l'affichage des cartes produits pour inclure les étoiles et le nombre d'avis sous la marque du produit."
+
+  - task: "Homepage Text Modifications"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "MODIFICATION TEXTE: Remplacé 'Nous travaillons avec les plus grandes marques comme AMD, Intel, NVIDIA, ASUS, MSI, et bien d'autres' par 'Nous fournissons des composants de qualité supérieure pour créer votre configuration gaming idéale' dans la page d'accueil - suppression des références aux marques partenaires et remplacement de 'travaillons avec' par 'fournissons'."
 metadata:
   created_by: "main_agent"
   version: "1.0"
