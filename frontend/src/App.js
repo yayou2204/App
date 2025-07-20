@@ -491,8 +491,17 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [priceRange, setPriceRange] = useState('');
 
   const categories = ['CPU', 'GPU', 'RAM', 'MOTHERBOARD', 'STORAGE', 'PSU', 'CASE', 'COOLING'];
+  const priceRanges = [
+    { label: 'Tous les prix', value: '' },
+    { label: 'Moins de 200 MAD', value: '0-200' },
+    { label: '200 - 500 MAD', value: '200-500' },
+    { label: '500 - 1000 MAD', value: '500-1000' },
+    { label: '1000 - 2000 MAD', value: '1000-2000' },
+    { label: 'Plus de 2000 MAD', value: '2000-999999' }
+  ];
 
   useEffect(() => {
     fetchProducts();
@@ -535,34 +544,65 @@ const Products = () => {
     }
   };
 
+  const filterProductsByPrice = (products) => {
+    if (!priceRange) return products;
+    
+    const [min, max] = priceRange.split('-').map(Number);
+    return products.filter(product => {
+      const price = product.price;
+      return price >= min && price <= max;
+    });
+  };
+
+  const filteredProducts = filterProductsByPrice(products);
+
   if (loading) return <div className="text-center py-8">Chargement...</div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Nos Produits</h1>
       
-      {/* Filters */}
-      <div className="flex flex-wrap gap-4 mb-8">
-        <button
-          onClick={() => setCategory('')}
-          className={`px-4 py-2 rounded ${category === '' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-        >
-          Toutes les catégories
-        </button>
-        {categories.map(cat => (
+      {/* Category Filters */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3">Catégories</h3>
+        <div className="flex flex-wrap gap-2">
           <button
-            key={cat}
-            onClick={() => setCategory(cat)}
-            className={`px-4 py-2 rounded ${category === cat ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+            onClick={() => setCategory('')}
+            className={`px-4 py-2 rounded ${category === '' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
           >
-            {cat}
+            Toutes les catégories
           </button>
-        ))}
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={`px-4 py-2 rounded ${category === cat ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Filters */}
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold mb-3">Filtrer par Prix</h3>
+        <div className="flex flex-wrap gap-2">
+          {priceRanges.map(range => (
+            <button
+              key={range.value}
+              onClick={() => setPriceRange(range.value)}
+              className={`px-4 py-2 rounded ${priceRange === range.value ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Products Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {products.map(product => (
+        {filteredProducts.map(product => (
           <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="h-48 bg-gray-200 flex items-center justify-center">
               {product.image_base64 ? (
@@ -606,11 +646,37 @@ const Products = () => {
         ))}
       </div>
       
-      {products.length === 0 && (
+      {filteredProducts.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">Aucun produit trouvé</p>
+          <p className="text-gray-500 text-lg mb-2">Aucun produit trouvé</p>
+          <p className="text-gray-400">
+            {priceRange ? 'Essayez un autre filtre de prix' : 'Essayez une recherche différente'}
+          </p>
         </div>
       )}
+
+      {/* Product Statistics */}
+      <div className="mt-12 bg-blue-50 p-6 rounded-lg">
+        <h3 className="text-xl font-semibold mb-4 text-blue-800">Statistiques des Produits</h3>
+        <div className="grid md:grid-cols-3 gap-4 text-center">
+          <div className="bg-white p-4 rounded">
+            <div className="text-2xl font-bold text-blue-600">{products.length}</div>
+            <div className="text-gray-600">Produits disponibles</div>
+          </div>
+          <div className="bg-white p-4 rounded">
+            <div className="text-2xl font-bold text-green-600">
+              {products.filter(p => p.stock_status === 'in_stock').length}
+            </div>
+            <div className="text-gray-600">En stock</div>
+          </div>
+          <div className="bg-white p-4 rounded">
+            <div className="text-2xl font-bold text-orange-600">
+              {new Set(products.map(p => p.brand)).size}
+            </div>
+            <div className="text-gray-600">Marques partenaires</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
