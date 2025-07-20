@@ -1405,18 +1405,23 @@ const AdminPanel = () => {
     e.preventDefault();
     
     try {
-      const formData = {
-        code: promoForm.code.toUpperCase(),
-        discount_percentage: parseFloat(promoForm.discount_percentage)
-      };
-
       if (editingPromo) {
         // Update existing promo code
-        await axios.put(`${API}/admin/promo-codes/${editingPromo.id}`, formData);
+        await axios.put(`${API}/admin/promo-codes/${editingPromo.id}`, null, {
+          params: {
+            code: promoForm.code.toUpperCase(),
+            discount_percentage: parseFloat(promoForm.discount_percentage)
+          }
+        });
         alert('Code promo modifié avec succès !');
       } else {
         // Create new promo code
-        await axios.post(`${API}/admin/promo-codes`, formData);
+        await axios.post(`${API}/admin/promo-codes`, null, {
+          params: {
+            code: promoForm.code.toUpperCase(),
+            discount_percentage: parseFloat(promoForm.discount_percentage)
+          }
+        });
         alert('Code promo créé avec succès !');
       }
       
