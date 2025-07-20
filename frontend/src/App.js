@@ -1063,12 +1063,22 @@ const Products = () => {
 
 // Product Detail Component
 const ProductDetail = ({ productId }) => {
+  const { user } = useAuth();
   const { updateCartCount, triggerCartAnimation } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reviews, setReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState(null);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    comment: ''
+  });
 
   useEffect(() => {
     fetchProduct();
+    fetchReviews();
+    fetchReviewStats();
   }, [productId]);
 
   const fetchProduct = async () => {
@@ -1082,20 +1092,48 @@ const ProductDetail = ({ productId }) => {
     }
   };
 
+  const fetchReviews = async () => {
+    try {
+      const response = await axios.get(`${API}/reviews/${productId}`);
+      setReviews(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des avis:', error);
+    }
+  };
+
+  const fetchReviewStats = async () => {
+    try {
+      const response = await axios.get(`${API}/reviews/${productId}/stats`);
+      setReviewStats(response.data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
+    }
+  };
+
+  const getStockBadge = (product) => {
+    if (product.stock_status === 'in_stock') {
+      return <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">En stock ({product.stock_quantity})</span>;
+    } else if (product.stock_status === 'out_of_stock') {
+      return <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">Rupture de stock</span>;
+    } else {
+      return <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">Bientôt disponible</span>;
+    }
+  };
+
   const addToCart = async () => {
     try {
       await axios.post(`${API}/cart/add?product_id=${productId}&quantity=1`);
       
       // Déclencher l'animation et mettre à jour le compteur
       triggerCartAnimation();
-      await updateCartCount();
+      updateCartCount();
       
-      // Animation de succès
+      // Animation du bouton
       const button = event.target;
       const originalText = button.textContent;
-      button.textContent = '✅ Ajouté au panier !';
-      button.classList.add('bg-green-600');
+      button.textContent = "✓ Ajouté !";
       button.classList.remove('bg-blue-600');
+      button.classList.add('bg-green-600');
       
       setTimeout(() => {
         button.textContent = originalText;
@@ -1108,12 +1146,59 @@ const ProductDetail = ({ productId }) => {
     }
   };
 
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/reviews`, {
+        product_id: productId,
+        rating: parseInt(reviewForm.rating),
+        comment: reviewForm.comment
+      });
+      alert('Avis ajouté avec succès !');
+      setShowReviewForm(false);
+      setReviewForm({ rating: 5, comment: '' });
+      fetchReviews();
+      fetchReviewStats();
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        alert('Vous avez déjà noté ce produit');
+      } else {
+        alert('Erreur lors de l\'ajout de l\'avis');
+      }
+    }
+  };
+
+  const renderStars = (rating) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>
+        ⭐
+      </span>
+    ));
+  };
+
+  const renderRatingStars = (rating, onRatingChange) => {
+    return (
+      <div className="flex space-x-1">
+        {Array.from({ length: 5 }, (_, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onRatingChange(i + 1)}
+            className={`text-2xl ${i < rating ? 'text-yellow-400' : 'text-gray-300'} hover:text-yellow-400`}
+          >
+            ⭐
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   if (loading) return <div className="text-center py-8">Chargement...</div>;
   if (!product) return <div className="text-center py-8">Produit non trouvé</div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 gap-8 mb-8">
         <div className="bg-gray-200 h-96 rounded-lg flex items-center justify-center">
           {product.image_base64 ? (
             <img 
@@ -1128,44 +1213,47 @@ const ProductDetail = ({ productId }) => {
             </div>
           )}
         </div>
+        
         <div>
           <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
           <p className="text-gray-600 mb-4">{product.brand}</p>
+          
+          {/* Note moyenne et statistiques */}
+          {reviewStats && reviewStats.total_reviews > 0 && (
+            <div className="mb-4 flex items-center">
+              <div className="flex items-center mr-4">
+                {renderStars(reviewStats.average_rating)}
+                <span className="ml-2 text-sm text-gray-600">
+                  {reviewStats.average_rating}/5 ({reviewStats.total_reviews} avis)
+                </span>
+              </div>
+            </div>
+          )}
           
           <p className="text-blue-600 font-bold text-3xl mb-6">{product.price} MAD</p>
           
           {/* Stock Status */}
           <div className="mb-6">
-            {product.stock_status === 'in_stock' && (
-              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full">
-                En stock ({product.stock_quantity} disponibles)
-              </span>
-            )}
-            {product.stock_status === 'out_of_stock' && (
-              <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full">Rupture de stock</span>
-            )}
-            {product.stock_status === 'coming_soon' && (
-              <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full">Bientôt disponible</span>
-            )}
+            {getStockBadge(product)}
           </div>
 
+          {/* Description */}
           <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-2">Description</h3>
+            <h3 className="font-semibold text-lg mb-2">Description</h3>
             <p className="text-gray-700">{product.description}</p>
           </div>
 
           {/* Specifications */}
-          {Object.keys(product.specifications).length > 0 && (
+          {product.specifications && Object.keys(product.specifications).length > 0 && (
             <div className="mb-6">
-              <h3 className="text-xl font-semibold mb-2">Spécifications</h3>
-              <div className="bg-gray-50 p-4 rounded">
+              <h3 className="font-semibold text-lg mb-2">Spécifications</h3>
+              <ul className="space-y-1">
                 {Object.entries(product.specifications).map(([key, value]) => (
-                  <div key={key} className="flex justify-between py-1">
-                    <span className="capitalize">{key.replace('_', ' ')}:</span>
-                    <span className="font-medium">{value}</span>
-                  </div>
+                  <li key={key} className="text-gray-700">
+                    <span className="font-medium">{key}:</span> {Array.isArray(value) ? value.join(', ') : value}
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           )}
 
@@ -1178,6 +1266,88 @@ const ProductDetail = ({ productId }) => {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Section Avis */}
+      <div className="mt-12">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Avis clients</h2>
+          {user && (
+            <button
+              onClick={() => setShowReviewForm(!showReviewForm)}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              {showReviewForm ? 'Annuler' : 'Laisser un avis'}
+            </button>
+          )}
+        </div>
+
+        {!user && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
+            <p className="text-blue-800">
+              <a href="/login" className="underline">Connectez-vous</a> pour laisser un avis sur ce produit.
+            </p>
+          </div>
+        )}
+
+        {/* Formulaire d'ajout d'avis */}
+        {showReviewForm && user && (
+          <div className="mb-6 p-6 bg-white border rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-4">Ajouter un avis</h3>
+            <form onSubmit={handleReviewSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Note</label>
+                {renderRatingStars(reviewForm.rating, (rating) => 
+                  setReviewForm({...reviewForm, rating})
+                )}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Commentaire (optionnel)</label>
+                <textarea
+                  value={reviewForm.comment}
+                  onChange={(e) => setReviewForm({...reviewForm, comment: e.target.value})}
+                  className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  rows="3"
+                  placeholder="Partagez votre expérience avec ce produit..."
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+              >
+                Publier l'avis
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Liste des avis */}
+        {reviews.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            Aucun avis pour ce produit. Soyez le premier à donner votre avis !
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {reviews.map((review) => (
+              <div key={review.id} className="p-6 bg-white border rounded-lg">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <div className="flex items-center mb-1">
+                      {renderStars(review.rating)}
+                      <span className="ml-2 text-sm text-gray-600">par {review.username}</span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {new Date(review.created_at).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                </div>
+                {review.comment && (
+                  <p className="text-gray-700 mt-2">{review.comment}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
