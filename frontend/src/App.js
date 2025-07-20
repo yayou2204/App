@@ -1970,6 +1970,7 @@ const AdminPanel = () => {
       price: '',
       description: '',
       stock_quantity: '',
+      generation: '',  // Ajout du champ génération
       specifications: '',
       image_base64: ''
     });
