@@ -106,6 +106,15 @@ class PromoCode(BaseModel):
     active: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+class ProductFilter(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str  # Nom du filtre (ex: "Prix", "Couleur", "Taille")
+    type: str  # Type de filtre: "range" (pour prix), "select" (pour choix multiples), "boolean"
+    values: List[str] = []  # Valeurs possibles pour le filtre (ex: ["Rouge", "Bleu", "Vert"])
+    field: str  # Champ produit sur lequel filtrer (ex: "price", "specifications.color", "brand")
+    active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 class PCConfiguration(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
