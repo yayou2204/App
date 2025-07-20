@@ -395,6 +395,42 @@ async def create_promo_code(code: str, discount_percentage: float, admin: User =
     await db.promo_codes.insert_one(promo.dict())
     return promo
 
+@api_router.get("/admin/promo-codes")
+async def get_promo_codes(admin: User = Depends(get_admin_user)):
+    promos = await db.promo_codes.find({}).to_list(1000)
+    return [PromoCode(**promo) for promo in promos]
+
+@api_router.put("/admin/promo-codes/{promo_id}")
+async def update_promo_code(promo_id: str, code: str, discount_percentage: float, admin: User = Depends(get_admin_user)):
+    result = await db.promo_codes.update_one(
+        {"id": promo_id},
+        {"$set": {"code": code, "discount_percentage": discount_percentage}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Promo code not found")
+    
+    return {"message": "Promo code updated successfully"}
+
+@api_router.delete("/admin/promo-codes/{promo_id}")
+async def delete_promo_code(promo_id: str, admin: User = Depends(get_admin_user)):
+    result = await db.promo_codes.delete_one({"id": promo_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Promo code not found")
+    return {"message": "Promo code deleted successfully"}
+
+@api_router.put("/admin/promo-codes/{promo_id}/toggle")
+async def toggle_promo_code(promo_id: str, active: bool, admin: User = Depends(get_admin_user)):
+    result = await db.promo_codes.update_one(
+        {"id": promo_id},
+        {"$set": {"active": active}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Promo code not found")
+    
+    return {"message": f"Promo code {'activated' if active else 'deactivated'} successfully"}
+
 @api_router.get("/configurator/categories")
 async def get_configurator_categories():
     return {
