@@ -1009,6 +1009,18 @@ const Products = () => {
               <h3 className="font-semibold text-lg mb-2">{product.name}</h3>
               <p className="text-gray-600 text-sm mb-2">{product.brand}</p>
               
+              {/* Note moyenne et avis */}
+              {productsReviewStats[product.id] && productsReviewStats[product.id].total_reviews > 0 && (
+                <div className="mb-2 flex items-center">
+                  <div className="flex items-center">
+                    {renderStars(Math.round(productsReviewStats[product.id].average_rating))}
+                    <span className="ml-1 text-xs text-gray-600">
+                      ({productsReviewStats[product.id].total_reviews})
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               <p className="text-blue-600 font-bold text-xl mb-2">{product.price} MAD</p>
               <div className="mb-3">
                 {getStockBadge(product)}
